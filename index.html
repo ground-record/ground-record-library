@@ -82,7 +82,7 @@ h1{
 }
 .stat{background:var(--paper);padding:18px 20px;min-height:105px;position:relative}
 .stat:before{
-  content:"CATALOGUE";
+  content:attr(data-label);
   display:block;
   font:700 9px/1.2 "Gill Sans","Trebuchet MS",sans-serif;
   letter-spacing:.18em;color:var(--oxblood);margin-bottom:12px
@@ -92,6 +92,7 @@ h1{
   position:absolute;left:18px;right:18px;bottom:10px;height:1px;background:#d8ceb7
 }
 .stat b{display:block;font-size:29px;letter-spacing:-.035em;font-weight:500}
+.stat .jp{display:block;margin-top:5px;font:500 11px/1.5 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;letter-spacing:.02em;color:#746b5b}
 .stat span{
   font:600 10px/1.4 "Gill Sans","Trebuchet MS",sans-serif;
   letter-spacing:.12em;color:var(--muted)
@@ -236,6 +237,13 @@ footer{
 .tag{border:1px solid #c9b98c;padding:4px 7px;font:700 9px "Gill Sans","Trebuchet MS",sans-serif;letter-spacing:.08em;color:var(--oxblood);background:#f6efdf}
 @media(max-width:760px){.venue-results{max-height:220px}.occasion-chip{padding:8px 9px}}
 
+
+.archive-note{margin-top:16px;max-width:720px;color:#ded7c8;font-size:12px;line-height:1.85}
+.archive-note strong{display:block;color:#f3ead2;font-family:"Gill Sans","Trebuchet MS",sans-serif;font-size:10px;letter-spacing:.16em;margin-bottom:5px}
+.external-records{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.external-records a{display:inline-block;border:1px solid #a99363;padding:9px 12px;text-decoration:none;color:inherit;font:700 10px "Gill Sans","Trebuchet MS",sans-serif;letter-spacing:.11em}
+.external-records a:hover{background:#173d32;color:#f4f0e5}
+.terrace-stamp{font-family:"Gill Sans","Trebuchet MS",sans-serif;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--oxblood)}
 </style>
 </head>
 <body>
@@ -246,15 +254,15 @@ footer{
     <h1>FOOTBALL<br>GROUND RECORD</h1>
     <div class="motto">THE COLLECTION IS NEVER COMPLETE.</div>
   </div>
-  <div class="subtitle">Match records, grounds, tickets and memories — a private football collection arranged for browsing, reference and return.</div>
+  <div class="subtitle">Match records, grounds, tickets and memories — a private football collection arranged for browsing, reference and return.<div class="archive-note"><strong>FOOTBALL ARCHIVE / フットボール観戦記録資料室</strong>2001年から続く個人のフットボール観戦記録。試合、スタジアム、チケット、そしてその日に残った記憶を、ひとつの資料として収蔵する。</div></div>
 </header>
 
 <div class="shelf-title">READING ROOM INDEX / 蔵書案内</div>
 <section class="stats">
-  <div class="stat"><b id="statMatches"></b><span>MATCH RECORDS / 蔵書</span></div>
-  <div class="stat"><b id="statVenues"></b><span>GROUNDS / 所蔵会場</span></div>
-  <div class="stat"><b id="statYears"></b><span>COLLECTION YEARS / 収蔵期間</span></div>
-  <div class="stat"><b id="statLatest"></b><span>LATEST ENTRY / 最新収蔵</span></div>
+  <div class="stat" data-label="MATCHES"><b id="statMatches"></b><span>MATCH RECORDS</span><span class="jp">観戦記録</span></div>
+  <div class="stat" data-label="GROUNDS"><b id="statVenues"></b><span>GROUNDS</span><span class="jp">観戦会場</span></div>
+  <div class="stat" data-label="YEARS"><b id="statYears"></b><span>COLLECTION YEARS</span><span class="jp">記録期間</span></div>
+  <div class="stat" data-label="LATEST ENTRY"><b id="statLatest"></b><span>LATEST ENTRY</span><span class="jp">最新記録</span></div>
 </section>
 
 <div class="notice">公開前チェック推奨：備考欄には同行者名など個人的な情報が含まれる可能性があります。この試作版はExcelの内容をそのまま表示するため、一般公開するときは「公開 / 非公開」列を追加して制御するのがおすすめです。</div>
@@ -287,7 +295,7 @@ footer{
 <div id="mobile" class="card-mobile"></div>
 <div id="empty" class="empty" hidden>該当する試合がありません。</div>
 
-<footer><span>FOOTBALL GROUND RECORD · THE GROUND RECORD LIBRARY</span><span>Collection source: 試合観戦記録.xlsx</span></footer>
+<footer><span><span class="terrace-stamp">FOOTBALL GROUND RECORD · THE GROUND RECORD LIBRARY</span><br>個人の観戦記録を残すフットボール・アーカイブ<div class="external-records"><a href="https://youtube.com/@groundrecord?si=DSsmRiy5Fv7El4pY" target="_blank" rel="noopener">YOUTUBE / 映像記録 ↗</a><a href="https://x.com/hiro40kashima?s=11" target="_blank" rel="noopener">X / FIELD NOTES ↗</a></div></span><span>Collection source: 試合観戦記録.xlsx<br>THE COLLECTION IS NEVER COMPLETE.</span></footer>
 </div>
 
 <dialog id="dialog">
