@@ -380,8 +380,16 @@ function filtered(){
     if (selectedOccasion && !(r.occasions||[]).includes(selectedOccasion)) return false;
     if (q) {
       const hay = plain([r.no_label,r.date_label,r.competition,r.round,r.card,r.score,r.scorers,r.seat,r.price,r.ticket_shop,r.venue,r.notes].join(" "));
+      const cardHay = plain(r.card || "");
+      const teamNames = teams.map(plain);
       const terms = q.split(/\s+/).map(plain).filter(Boolean);
-      if (!terms.every(term => hay.includes(term))) return false;
+      const ok = terms.every(term => {
+        // A term that matches part of a known club name is treated as a club term.
+        // Club terms must occur in the match card itself; other words search the full record.
+        const isClubTerm = teamNames.some(name => name.includes(term));
+        return isClubTerm ? cardHay.includes(term) : hay.includes(term);
+      });
+      if (!ok) return false;
     }
     return true;
   }).sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0));
