@@ -775,16 +775,62 @@ function groundStats(rows, team){
     .sort((a,b)=>b.matches-a.matches || b.w-a.w || a.venue.localeCompare(b.venue,"ja"));
 }
 function groundCompetitionGroup(label){
-  const s=String(label||"");
+  const s=String(label||"").replace(/\s+/g," ").trim();
+  if(!s) return "UNKNOWN / 大会不明";
   if(/Jリーグディビジョン1|J1リーグ|Ｊ１リーグ|Jリーグディビジョン2|J2リーグ|Ｊ２リーグ|Jリーグディビジョン3|J3リーグ|Ｊ３リーグ|百年構想リーグ/i.test(s)) return "LEAGUE / リーグ戦";
   if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "LEAGUE CUP / リーグカップ";
   if(/天皇杯/.test(s)) return "EMPEROR'S CUP / 天皇杯";
-  if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE|ACL|クラブワールドカップ|Club World Cup/i.test(s)) return "INTERNATIONAL / 国際大会";
+
+  // International competitions are kept separate instead of one broad bucket.
+  if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE|ACL Elite|ACL/i.test(s)) return "AFC CHAMPIONS LEAGUE / ACL";
+  if(/クラブワールドカップ|Club World Cup/i.test(s)) return "FIFA CLUB WORLD CUP / クラブW杯";
+  if(/スルガ銀行チャンピオンシップ/i.test(s)) return "SURUGA BANK CHAMPIONSHIP / スルガ銀行杯";
+  if(/ワールドチャレンジ/i.test(s)) return "WORLD CHALLENGE / 国際クラブ親善";
+  if(/国際親善試合/i.test(s)) return "INTERNATIONAL FRIENDLY / 国際親善試合";
+
   if(/スーパーカップ|SUPER CUP/i.test(s)) return "SUPER CUP / スーパーカップ";
+  if(/Jリーグチャンピオンシップ/i.test(s)) return "J.LEAGUE CHAMPIONSHIP / CS";
+  if(/いばらきサッカーフェスティバル/i.test(s)) return "IBARAKI SOCCER FESTIVAL / いばらきSF";
+  if(/引退試合|記念試合/i.test(s)) return "TESTIMONIAL / 引退・記念試合";
+  if(/プレシーズン|PSM|親善試合|フレンドリーマッチ/i.test(s)) return "FRIENDLY / 親善・PSM";
+
+  // Keep other official competitions identifiable instead of collapsing everything to OTHER.
+  if(/日本フットボールリーグ|JFL/i.test(s)) return "JFL / 日本フットボールリーグ";
+  if(/関東サッカーリーグ/i.test(s)) return "KANTO LEAGUE / 関東サッカーリーグ";
+  if(/全国高校サッカー選手権/i.test(s)) return "HIGH SCHOOL / 高校選手権";
+  if(/大学.*選手権|インカレ/i.test(s)) return "UNIVERSITY / 大学選手権";
+  if(/ワールドカップ.*予選|W杯.*予選/i.test(s)) return "WORLD CUP QUALIFIER / W杯予選";
+  if(/アジアカップ/i.test(s)) return "AFC ASIAN CUP / アジアカップ";
+  if(/ブラインドサッカー/i.test(s)) return "BLIND FOOTBALL / ブラインドサッカー";
+  if(/フットサル/i.test(s)) return "FUTSAL / フットサル";
   return "OTHER / その他";
 }
 function groundCompetitionStats(rows, team){
-  const order=["LEAGUE / リーグ戦","LEAGUE CUP / リーグカップ","EMPEROR'S CUP / 天皇杯","INTERNATIONAL / 国際大会","SUPER CUP / スーパーカップ","OTHER / その他"];
+  const order=[
+    "LEAGUE / リーグ戦",
+    "LEAGUE CUP / リーグカップ",
+    "EMPEROR'S CUP / 天皇杯",
+    "AFC CHAMPIONS LEAGUE / ACL",
+    "FIFA CLUB WORLD CUP / クラブW杯",
+    "SURUGA BANK CHAMPIONSHIP / スルガ銀行杯",
+    "WORLD CHALLENGE / 国際クラブ親善",
+    "INTERNATIONAL FRIENDLY / 国際親善試合",
+    "SUPER CUP / スーパーカップ",
+    "J.LEAGUE CHAMPIONSHIP / CS",
+    "IBARAKI SOCCER FESTIVAL / いばらきSF",
+    "TESTIMONIAL / 引退・記念試合",
+    "FRIENDLY / 親善・PSM",
+    "JFL / 日本フットボールリーグ",
+    "KANTO LEAGUE / 関東サッカーリーグ",
+    "HIGH SCHOOL / 高校選手権",
+    "UNIVERSITY / 大学選手権",
+    "WORLD CUP QUALIFIER / W杯予選",
+    "AFC ASIAN CUP / アジアカップ",
+    "BLIND FOOTBALL / ブラインドサッカー",
+    "FUTSAL / フットサル",
+    "OTHER / その他",
+    "UNKNOWN / 大会不明"
+  ];
   const by=new Map();
   rows.forEach(r=>{
     const key=groundCompetitionGroup(r.competition);
