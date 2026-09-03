@@ -288,19 +288,42 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .venue-record{border-top:9px solid var(--oxblood)}
 .ground-summary{border-top:9px solid var(--green);grid-column:1/-1}
 .ground-summary-list{display:grid;gap:0}
-.ground-summary-row{display:grid;grid-template-columns:34px minmax(150px,1.6fr) repeat(4,minmax(70px,.55fr));gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ddd2bb;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-summary-item{border-bottom:1px solid #ddd2bb}
+.ground-summary-row{width:100%;appearance:none;border:0;background:transparent;color:inherit;display:grid;grid-template-columns:34px minmax(150px,1.6fr) repeat(4,minmax(70px,.55fr)) 18px;gap:8px;align-items:center;padding:10px 0;text-align:left;cursor:pointer;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-summary-row:focus-visible{outline:2px solid var(--oxblood);outline-offset:3px}
 .ground-summary-row .rank{font:900 9px Arial,sans-serif;color:var(--oxblood)}
 .ground-summary-row .ground{font-weight:800;min-width:0;word-break:break-word}
 .ground-summary-row .ground-metric{text-align:right;white-space:nowrap}
 .ground-summary-row .record{font-weight:900;color:var(--green)}
-.ground-summary-more{margin-top:12px;border:2px solid #81765f;background:#f8f3e6;padding:9px 13px;font:900 9px Arial,sans-serif;letter-spacing:.1em;cursor:pointer}
+.ground-summary-row .ground-chevron{font:900 14px/1 Arial,sans-serif;color:var(--oxblood);text-align:right;transition:transform .15s ease}
+.ground-summary-item.open .ground-chevron{transform:rotate(45deg)}
+.ground-detail{padding:2px 0 14px 42px}
+.ground-detail-head{font:900 9px/1.35 Arial,sans-serif;letter-spacing:.12em;color:var(--muted);margin:2px 0 7px}
+.ground-competition-list{border-top:1px solid #cfc4aa}
+.ground-competition-row{display:grid;grid-template-columns:minmax(120px,1fr) 64px 116px 72px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #e2d9c5;font:700 9px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-competition-row .comp-name{font-weight:900;min-width:0;word-break:break-word}
+.ground-competition-row .comp-record{color:var(--green);font-weight:900;white-space:nowrap}
+.ground-competition-row .comp-num,.ground-competition-row .comp-gfga{text-align:right;white-space:nowrap}
+.ground-match-toggle,.ground-summary-more{margin-top:10px;border:2px solid #81765f;background:#f8f3e6;color:inherit;padding:9px 13px;font:900 9px Arial,sans-serif;letter-spacing:.08em;cursor:pointer}
+.ground-match-list{margin-top:8px;border-top:1px solid #cfc4aa}
+.ground-match-row{display:grid;grid-template-columns:82px minmax(0,1fr) 58px;gap:8px;padding:7px 0;border-bottom:1px solid #e2d9c5;font:700 9px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-match-row .gm-date{color:var(--muted)}
+.ground-match-row .gm-score{text-align:right;font-weight:900;color:var(--green);white-space:pre-line}
 @media(max-width:760px){
-.ground-summary-row{grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:"rank ground matches" "rank record record";column-gap:7px;row-gap:3px;padding:10px 0}
+.ground-summary-row{grid-template-columns:26px minmax(0,1fr) auto 16px;grid-template-areas:"rank ground matches chev" "rank record record chev";column-gap:7px;row-gap:3px;padding:11px 0}
 .ground-summary-row .rank{grid-area:rank;align-self:start;padding-top:2px}
 .ground-summary-row .ground{grid-area:ground;font-size:11px;line-height:1.35}
 .ground-summary-row .matches{grid-area:matches;font-size:9px;align-self:start}
 .ground-summary-row .record{grid-area:record;text-align:left;font-size:9px}
+.ground-summary-row .ground-chevron{grid-area:chev;align-self:center}
 .ground-summary-row .gfga,.ground-summary-row .rate{display:none}
+.ground-detail{padding:1px 0 13px 33px}
+.ground-competition-row{grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0}
+.ground-competition-row .comp-name{font-size:9px}
+.ground-competition-row .comp-num{grid-column:2;text-align:right}
+.ground-competition-row .comp-record{grid-column:1}
+.ground-competition-row .comp-gfga{grid-column:2;text-align:right}
+.ground-match-row{grid-template-columns:68px minmax(0,1fr) 48px;gap:6px;font-size:8px}
 }
 .scorer-record{border-top:9px solid var(--brass);grid-column:1/-1}
 .report-kicker{font:900 10px/1.25 "Arial Narrow","Helvetica Neue",Arial,"Yu Gothic",sans-serif;letter-spacing:.16em;color:var(--oxblood);text-transform:uppercase;margin-bottom:12px}
@@ -748,15 +771,40 @@ function groundStats(rows, team){
     if(!by.has(venue)) by.set(venue,[]);
     by.get(venue).push(r);
   });
-  return [...by.entries()].map(([venue,rs])=>({venue,...clubStats(rs,team)}))
+  return [...by.entries()].map(([venue,rs])=>({venue,rows:rs,...clubStats(rs,team)}))
     .sort((a,b)=>b.matches-a.matches || b.w-a.w || a.venue.localeCompare(b.venue,"ja"));
+}
+function groundCompetitionGroup(label){
+  const s=String(label||"");
+  if(/Jリーグディビジョン1|J1リーグ|Ｊ１リーグ|Jリーグディビジョン2|J2リーグ|Ｊ２リーグ|Jリーグディビジョン3|J3リーグ|Ｊ３リーグ|百年構想リーグ/i.test(s)) return "LEAGUE / リーグ戦";
+  if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "LEAGUE CUP / リーグカップ";
+  if(/天皇杯/.test(s)) return "EMPEROR'S CUP / 天皇杯";
+  if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE|ACL|クラブワールドカップ|Club World Cup/i.test(s)) return "INTERNATIONAL / 国際大会";
+  if(/スーパーカップ|SUPER CUP/i.test(s)) return "SUPER CUP / スーパーカップ";
+  return "OTHER / その他";
+}
+function groundCompetitionStats(rows, team){
+  const order=["LEAGUE / リーグ戦","LEAGUE CUP / リーグカップ","EMPEROR'S CUP / 天皇杯","INTERNATIONAL / 国際大会","SUPER CUP / スーパーカップ","OTHER / その他"];
+  const by=new Map();
+  rows.forEach(r=>{
+    const key=groundCompetitionGroup(r.competition);
+    if(!by.has(key)) by.set(key,[]);
+    by.get(key).push(r);
+  });
+  return order.filter(k=>by.has(k)).map(k=>({name:k,...clubStats(by.get(k),team)}));
+}
+function groundDetailHtml(s,team){
+  const comps=groundCompetitionStats(s.rows,team);
+  const compHtml=comps.map(c=>`<div class="ground-competition-row"><span class="comp-name">${esc(c.name)}</span><span class="comp-num">${c.matches}試合</span><span class="comp-record">${c.w}勝${c.d}分${c.l}敗</span><span class="comp-gfga">${c.gf}-${c.ga}</span></div>`).join("");
+  const matchRows=s.rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0)).map(r=>`<div class="ground-match-row"><span class="gm-date">${esc(r.date_label||r.date||"—")}</span><span>${esc(r.card||"—")}<br><span style="color:var(--muted)">${esc(competitionBucket(r.competition))}</span></span><span class="gm-score">${esc(r.score||"—")}</span></div>`).join("");
+  return `<div class="ground-detail-head">COMPETITION RECORD / 大会別戦績</div><div class="ground-competition-list">${compHtml}</div><button type="button" class="ground-match-toggle" aria-expanded="false">この会場の試合一覧を見る（${s.rows.length}試合）</button><div class="ground-match-list" hidden>${matchRows}</div>`;
 }
 let showAllGrounds=false;
 function groundSummaryHtml(rows, team){
   const stats=groundStats(rows,team), shown=showAllGrounds?stats:stats.slice(0,10);
-  const lines=shown.map((s,i)=>`<div class="ground-summary-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="ground-metric matches">${s.matches}試合</span><span class="ground-metric record">${s.w}勝${s.d}分${s.l}敗</span><span class="ground-metric gfga">${s.gf}-${s.ga}</span><span class="ground-metric rate">${s.winRate.toFixed(1)}%</span></div>`).join("");
+  const lines=shown.map((s,i)=>`<div class="ground-summary-item"><button type="button" class="ground-summary-row" aria-expanded="false"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="ground-metric matches">${s.matches}試合</span><span class="ground-metric record">${s.w}勝${s.d}分${s.l}敗</span><span class="ground-metric gfga">${s.gf}-${s.ga}</span><span class="ground-metric rate">${s.winRate.toFixed(1)}%</span><span class="ground-chevron">＋</span></button><div class="ground-detail" hidden>${groundDetailHtml(s,team)}</div></div>`).join("");
   const more=stats.length>10?`<button type="button" class="ground-summary-more" id="groundSummaryMore">${showAllGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
-  return `<div class="report-kicker">GROUND RECORDS / 会場別観戦戦績</div><div class="scorer-note">${esc(team)} — 現在の絞り込み条件に含まれる試合を会場別に集計（試合数順）</div><div class="ground-summary-list">${lines}</div>${more}`;
+  return `<div class="report-kicker">GROUND RECORDS / 会場別観戦戦績</div><div class="scorer-note">${esc(team)} — 会場名をタップすると大会別戦績と試合一覧を開きます。</div><div class="ground-summary-list">${lines}</div>${more}`;
 }
 function activeConditions(){
   const bits=[];
@@ -823,6 +871,20 @@ function render(){
   if(team && !selectedVenue && !venueSearch.value.trim()){
     groundBox.hidden=false;
     groundBox.innerHTML=groundSummaryHtml(rows,team);
+    groundBox.querySelectorAll(".ground-summary-row").forEach(btn=>btn.addEventListener("click",()=>{
+      const item=btn.closest(".ground-summary-item"), detail=item.querySelector(".ground-detail");
+      const opening=detail.hidden;
+      detail.hidden=!opening;
+      item.classList.toggle("open",opening);
+      btn.setAttribute("aria-expanded",String(opening));
+      btn.querySelector(".ground-chevron").textContent=opening?"×":"＋";
+    }));
+    groundBox.querySelectorAll(".ground-match-toggle").forEach(btn=>btn.addEventListener("click",()=>{
+      const list=btn.nextElementSibling, opening=list.hidden;
+      list.hidden=!opening;
+      btn.setAttribute("aria-expanded",String(opening));
+      btn.textContent=opening?"試合一覧を閉じる":`この会場の試合一覧を見る（${list.children.length}試合）`;
+    }));
     const moreBtn=$("#groundSummaryMore");
     if(moreBtn) moreBtn.onclick=()=>{showAllGrounds=!showAllGrounds; render(); groundBox.scrollIntoView({behavior:"smooth",block:"start"});};
   } else { groundBox.hidden=true; groundBox.innerHTML=""; showAllGrounds=false; }
