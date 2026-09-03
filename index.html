@@ -306,7 +306,10 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .ground-competition-row .comp-num,.ground-competition-row .comp-gfga{text-align:right;white-space:nowrap}
 .ground-match-toggle,.ground-summary-more{margin-top:10px;border:2px solid #81765f;background:#f8f3e6;color:inherit;padding:9px 13px;font:900 9px Arial,sans-serif;letter-spacing:.08em;cursor:pointer}
 .ground-match-list{margin-top:8px;border-top:1px solid #cfc4aa}
-.ground-match-row{display:grid;grid-template-columns:82px minmax(0,1fr) 58px;gap:8px;padding:7px 0;border-bottom:1px solid #e2d9c5;font:700 9px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-match-row{display:grid;width:100%;grid-template-columns:82px minmax(0,1fr) 58px;gap:8px;padding:7px 0;border:0;border-bottom:1px solid #e2d9c5;background:transparent;color:inherit;text-align:left;font:700 9px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;cursor:pointer}
+.ground-match-row:active{background:rgba(18,72,54,.06)}
+.ground-match-row:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.ground-match-hint{margin-top:7px;color:var(--muted);font:700 8px/1.4 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;letter-spacing:.02em}
 .ground-match-row .gm-date{color:var(--muted)}
 .ground-match-row .gm-score{text-align:right;font-weight:900;color:var(--green);white-space:pre-line}
 @media(max-width:760px){
@@ -777,31 +780,50 @@ function groundStats(rows, team){
 function groundCompetitionGroup(label){
   const s=String(label||"").replace(/\s+/g," ").trim();
   if(!s) return "UNKNOWN / 大会不明";
-  if(/Jリーグディビジョン1|J1リーグ|Ｊ１リーグ|Jリーグディビジョン2|J2リーグ|Ｊ２リーグ|Jリーグディビジョン3|J3リーグ|Ｊ３リーグ|百年構想リーグ/i.test(s)) return "LEAGUE / リーグ戦";
+  if(/Jリーグディビジョン1|J1リーグ|Ｊ1リーグ|Ｊ１リーグ/i.test(s)) return "J1 LEAGUE / J1リーグ";
+  if(/Jリーグディビジョン2|J2リーグ|Ｊ2リーグ|Ｊ２リーグ/i.test(s)) return "J2 LEAGUE / J2リーグ";
+  if(/Jリーグディビジョン3|J3リーグ|Ｊ3リーグ|Ｊ３リーグ/i.test(s)) return "J3 LEAGUE / J3リーグ";
+  if(/なでしこリーグ/i.test(s)) return "NADESHIKO LEAGUE / なでしこリーグ";
+  if(/WEリーグ/i.test(s)) return "WE LEAGUE / WEリーグ";
+  if(/Ｆリーグ|Fリーグ/i.test(s)) return "F.LEAGUE / Fリーグ";
+  if(/スュペル.*リグ|Süper Lig/i.test(s)) return "SÜPER LIG / トルコ1部";
+  if(/K League 1|Kリーグ.*1/i.test(s)) return "K LEAGUE 1 / 韓国1部";
+  if(/Aリーグ/i.test(s)) return "A-LEAGUE / 豪州リーグ";
   if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "LEAGUE CUP / リーグカップ";
   if(/天皇杯/.test(s)) return "EMPEROR'S CUP / 天皇杯";
-
-  // International competitions are kept separate instead of one broad bucket.
+  if(/Jリーグチャンピオンシップ/i.test(s)) return "J.LEAGUE CHAMPIONSHIP / CS";
+  if(/J1参入プレーオフ|J1昇格プレーオフ/i.test(s)) return "J1 PLAY-OFF / J1参入・昇格PO";
+  if(/J2・J3入れ替え戦/i.test(s)) return "J2-J3 PLAY-OFF / 入れ替え戦";
   if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE|ACL Elite|ACL/i.test(s)) return "AFC CHAMPIONS LEAGUE / ACL";
   if(/クラブワールドカップ|Club World Cup/i.test(s)) return "FIFA CLUB WORLD CUP / クラブW杯";
+  if(/EAFF E-1/i.test(s)) return "EAFF E-1 / E-1選手権";
+  if(/キリンチャレンジカップ/i.test(s)) return "KIRIN CHALLENGE CUP / キリンチャレンジ杯";
+  if(/キリンカップ/i.test(s)) return "KIRIN CUP / キリンカップ";
+  if(/TOYO TIRES CUP/i.test(s)) return "TOYO TIRES CUP / 日本代表戦";
+  if(/JALチャレンジカップ/i.test(s)) return "JAL CHALLENGE CUP / 日本代表戦";
   if(/スルガ銀行チャンピオンシップ/i.test(s)) return "SURUGA BANK CHAMPIONSHIP / スルガ銀行杯";
   if(/ワールドチャレンジ/i.test(s)) return "WORLD CHALLENGE / 国際クラブ親善";
+  if(/PSG|パリ・サン=ジェルマン|ブンデスリーガジャパンツアー|EUROJAPAN CUP|Audi Football Summit|ブライトン.*ジャパンツアー|EL CLÁSICO/i.test(s)) return "INTERNATIONAL CLUB EVENT / 国際クラブ戦";
   if(/国際親善試合/i.test(s)) return "INTERNATIONAL FRIENDLY / 国際親善試合";
-
   if(/スーパーカップ|SUPER CUP/i.test(s)) return "SUPER CUP / スーパーカップ";
-  if(/Jリーグチャンピオンシップ/i.test(s)) return "J.LEAGUE CHAMPIONSHIP / CS";
   if(/いばらきサッカーフェスティバル/i.test(s)) return "IBARAKI SOCCER FESTIVAL / いばらきSF";
-  if(/引退試合|記念試合/i.test(s)) return "TESTIMONIAL / 引退・記念試合";
-  if(/プレシーズン|PSM|親善試合|フレンドリーマッチ/i.test(s)) return "FRIENDLY / 親善・PSM";
-
-  // Keep other official competitions identifiable instead of collapsing everything to OTHER.
+  if(/引退試合|送別試合|LEGEND MATCH|レジェンド|ダイヤモンドカップオブレジェンド/i.test(s)) return "TESTIMONIAL / 引退・レジェンド戦";
+  if(/チャリティー|復興支援|FOOTBALL STARS AID|スペシャルマッチ|JAPAN ALL STAR/i.test(s)) return "CHARITY・ALL STAR / チャリティー・選抜戦";
+  if(/ドリームマッチ|ニューイヤーカップ|さいたまシティカップ|ＡＴＨＬＥＴＡマッチ|ATHLETAマッチ|プレシーズン|PSM|親善試合|フレンドリーマッチ/i.test(s)) return "FRIENDLY / 親善・PSM";
   if(/日本フットボールリーグ|JFL/i.test(s)) return "JFL / 日本フットボールリーグ";
-  if(/関東サッカーリーグ/i.test(s)) return "KANTO LEAGUE / 関東サッカーリーグ";
-  if(/全国高校サッカー選手権/i.test(s)) return "HIGH SCHOOL / 高校選手権";
-  if(/大学.*選手権|インカレ/i.test(s)) return "UNIVERSITY / 大学選手権";
+  if(/全国地域サッカーチャンピオンズリーグ/i.test(s)) return "REGIONAL CL / 地域CL";
+  if(/関東サッカーリーグ|KSL市原ATHLETAカップ/i.test(s)) return "KANTO LEAGUE / 関東リーグ系";
+  if(/東海社会人サッカーリーグ/i.test(s)) return "TOKAI LEAGUE / 東海社会人リーグ";
+  if(/埼玉県社会人サッカーリーグ|埼玉県社会人サッカートーナメント|彩の国カップ/i.test(s)) return "SAITAMA / 埼玉県社会人";
+  if(/神奈川県サッカーリーグ/i.test(s)) return "KANAGAWA / 神奈川県リーグ";
+  if(/大阪社会人カップ/i.test(s)) return "OSAKA / 大阪社会人カップ";
+  if(/関東社会人サッカー大会/i.test(s)) return "KANTO SOCIETY / 関東社会人大会";
+  if(/全国高校サッカー選手権|関東高等学校サッカー大会|U-18サッカー大会|高円宮杯U-18/i.test(s)) return "YOUTH / 高校・U-18";
+  if(/大学.*選手権|インカレ|大学サッカーリーグ/i.test(s)) return "UNIVERSITY / 大学サッカー";
   if(/ワールドカップ.*予選|W杯.*予選/i.test(s)) return "WORLD CUP QUALIFIER / W杯予選";
   if(/アジアカップ/i.test(s)) return "AFC ASIAN CUP / アジアカップ";
   if(/ブラインドサッカー/i.test(s)) return "BLIND FOOTBALL / ブラインドサッカー";
+  if(/ビーチサッカー/i.test(s)) return "BEACH SOCCER / ビーチサッカー";
   if(/フットサル/i.test(s)) return "FUTSAL / フットサル";
   return "OTHER / その他";
 }
@@ -842,8 +864,8 @@ function groundCompetitionStats(rows, team){
 function groundDetailHtml(s,team){
   const comps=groundCompetitionStats(s.rows,team);
   const compHtml=comps.map(c=>`<div class="ground-competition-row"><span class="comp-name">${esc(c.name)}</span><span class="comp-num">${c.matches}試合</span><span class="comp-record">${c.w}勝${c.d}分${c.l}敗</span><span class="comp-gfga">${c.gf}-${c.ga}</span></div>`).join("");
-  const matchRows=s.rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0)).map(r=>`<div class="ground-match-row"><span class="gm-date">${esc(r.date_label||r.date||"—")}</span><span>${esc(r.card||"—")}<br><span style="color:var(--muted)">${esc(competitionBucket(r.competition))}</span></span><span class="gm-score">${esc(r.score||"—")}</span></div>`).join("");
-  return `<div class="ground-detail-head">COMPETITION RECORD / 大会別戦績</div><div class="ground-competition-list">${compHtml}</div><button type="button" class="ground-match-toggle" aria-expanded="false">この会場の試合一覧を見る（${s.rows.length}試合）</button><div class="ground-match-list" hidden>${matchRows}</div>`;
+  const matchRows=s.rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0)).map(r=>`<button type="button" class="ground-match-row" data-match-idx="${DATA.indexOf(r)}" aria-label="${esc((r.date_label||r.date||"")+" "+(r.card||"")+" "+(r.score||"")+" の試合詳細を開く")}"><span class="gm-date">${esc(r.date_label||r.date||"—")}</span><span>${esc(r.card||"—")}<br><span style="color:var(--muted)">${esc(competitionBucket(r.competition))}</span></span><span class="gm-score">${esc(r.score||"—")}</span></button>`).join("");
+  return `<div class="ground-detail-head">COMPETITION RECORD / 大会別戦績</div><div class="ground-competition-list">${compHtml}</div><button type="button" class="ground-match-toggle" aria-expanded="false">この会場の試合一覧を見る（${s.rows.length}試合）</button><div class="ground-match-list" hidden><div class="ground-match-hint">試合をタップすると観戦記録の詳細を開きます。</div>${matchRows}</div>`;
 }
 let showAllGrounds=false;
 function groundSummaryHtml(rows, team){
@@ -929,7 +951,12 @@ function render(){
       const list=btn.nextElementSibling, opening=list.hidden;
       list.hidden=!opening;
       btn.setAttribute("aria-expanded",String(opening));
-      btn.textContent=opening?"試合一覧を閉じる":`この会場の試合一覧を見る（${list.children.length}試合）`;
+      const matchCount=list.querySelectorAll(".ground-match-row").length;
+      btn.textContent=opening?"試合一覧を閉じる":`この会場の試合一覧を見る（${matchCount}試合）`;
+    }));
+    groundBox.querySelectorAll(".ground-match-row[data-match-idx]").forEach(btn=>btn.addEventListener("click",()=>{
+      const r=DATA[Number(btn.dataset.matchIdx)];
+      if(r) openDetail(r);
     }));
     const moreBtn=$("#groundSummaryMore");
     if(moreBtn) moreBtn.onclick=()=>{showAllGrounds=!showAllGrounds; render(); groundBox.scrollIntoView({behavior:"smooth",block:"start"});};
