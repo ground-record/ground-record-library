@@ -302,6 +302,12 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .scorer-rank{font:900 9px Arial,sans-serif;color:var(--oxblood);letter-spacing:.08em}
 .scorer-goals{font:900 10px Arial,sans-serif;color:var(--green);white-space:nowrap}
 .scorer-empty{font-size:11px;color:var(--muted);padding:8px 0}
+.scorer-breakdowns{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px;padding-top:14px;border-top:1px solid #cbbf9e}
+.scorer-breakdown-title{font:900 10px/1.2 Arial,sans-serif;letter-spacing:.16em;color:var(--oxblood);margin-bottom:8px}
+.scorer-breakdown-row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid #ddd2bb;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.scorer-breakdown-row .name{min-width:0;word-break:break-word}
+.scorer-breakdown-row .goals{font:900 9px Arial,sans-serif;color:var(--green);white-space:nowrap}
+@media(max-width:760px){.scorer-breakdowns{grid-template-columns:1fr;gap:14px}}
 @media(max-width:900px){.search-report{grid-template-columns:1fr 1fr}.scorer-record{grid-column:1/-1}}
 @media(max-width:760px){.search-report{grid-template-columns:1fr;gap:8px;margin-top:20px}.scorer-record{grid-column:auto}.result-ticket,.club-record,.venue-record,.scorer-record{box-shadow:4px 4px 0 rgba(23,61,50,.1);padding:16px}.club-grid{grid-template-columns:repeat(3,1fr)}.club-cell:nth-child(4),.club-cell:nth-child(5){grid-column:span 1}.scorer-search-row{max-width:none}.meta{margin-top:18px}}
 
@@ -386,6 +392,7 @@ const DATA = [{"no":1,"no_label":"No1","date":"2001-04-04","date_label":"2001/4/
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const plain = s => String(s ?? "").toLowerCase();
+const personKey = s => plain(s).replace(/[\s　]+/g, "").replace(/(?:pk|ＰＫ)$/i, "");
 const numbered = DATA.filter(x => x.no !== null);
 const venues = [...new Set(DATA.map(x=>x.venue).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
 const years = [...new Set(DATA.map(x=>x.year).filter(Boolean))].sort((a,b)=>a-b);
@@ -473,9 +480,51 @@ function scorerRanking(rows){
   const counts = new Map();
   rows.forEach(r => String(r.scorers||"").split(/\n+/).forEach(line=>{
     const name=scorerNameFromLine(line);
-    if(name) counts.set(name,(counts.get(name)||0)+1);
+    if(!name) return;
+    const key=personKey(name);
+    if(!key) return;
+    const prev=counts.get(key) || {name, count:0};
+    prev.count++;
+    // Prefer a spaced Japanese full-name form when available for readability.
+    if(!/[\s　]/.test(prev.name) && /[\s　]/.test(name)) prev.name=name;
+    counts.set(key,prev);
   }));
-  return [...counts.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  return [...counts.values()].map(x=>[x.name,x.count]).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+}
+function competitionBucket(label){
+  let s=String(label||"").trim();
+  if(!s) return "大会不明";
+  s=s.replace(/^\s*(?:19|20)\d{2}\s*/, "").trim();
+  if(/Jリーグディビジョン1|J1リーグ|Ｊ１リーグ/i.test(s)) return "J1リーグ";
+  if(/Jリーグディビジョン2|J2リーグ|Ｊ２リーグ/i.test(s)) return "J2リーグ";
+  if(/Jリーグディビジョン3|J3リーグ|Ｊ３リーグ/i.test(s)) return "J3リーグ";
+  if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "Jリーグカップ";
+  if(/天皇杯/.test(s)) return "天皇杯";
+  if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE/i.test(s)) return "AFCチャンピオンズリーグ";
+  if(/クラブワールドカップ|Club World Cup/i.test(s)) return "FIFAクラブワールドカップ";
+  if(/スーパーカップ|SUPER CUP/i.test(s)) return "スーパーカップ";
+  return s;
+}
+function scorerBreakdowns(rows, scorerTerm){
+  const venue=new Map(), competition=new Map();
+  let goals=0;
+  rows.forEach(r=>{
+    String(r.scorers||"").split(/\n+/).forEach(line=>{
+      const name=scorerNameFromLine(line);
+      if(!name || !personKey(name).includes(scorerTerm)) return;
+      goals++;
+      const v=(r.venue||"").trim() || "会場不明";
+      const c=competitionBucket(r.competition);
+      venue.set(v,(venue.get(v)||0)+1);
+      competition.set(c,(competition.get(c)||0)+1);
+    });
+  });
+  const sortMap=m=>[...m.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  return {goals, venue:sortMap(venue), competition:sortMap(competition)};
+}
+function breakdownHtml(title, rows){
+  if(!rows.length) return `<div><div class="scorer-breakdown-title">${title}</div><div class="scorer-empty">データがありません。</div></div>`;
+  return `<div><div class="scorer-breakdown-title">${title}</div>${rows.map(([name,n],i)=>`<div class="scorer-breakdown-row"><span class="scorer-rank">${String(i+1).padStart(2,"0")}</span><span class="name">${esc(name)}</span><span class="goals">${n} GOALS</span></div>`).join("")}</div>`;
 }
 function clubStats(rows, team){
   let w=0,d=0,l=0,gf=0,ga=0,played=0;
@@ -508,7 +557,7 @@ function filtered(){
     if (selectedVenue && (r.venue||"").trim() !== selectedVenue) return false;
     if (!selectedVenue && venueSearch.value.trim() && !plain(r.venue||"").includes(plain(venueSearch.value.trim()))) return false;
     if (selectedOccasion && !(r.occasions||[]).includes(selectedOccasion)) return false;
-    if (scorer && !plain(r.scorers||"").includes(scorer)) return false;
+    if (scorer && !String(r.scorers||"").split(/\n+/).some(line => personKey(scorerNameFromLine(line)).includes(personKey(scorer)))) return false;
     if (q) {
       const hay = plain([r.no_label,r.date_label,r.competition,r.round,r.card,r.score,r.scorers,r.seat,r.price,r.ticket_shop,r.venue,r.notes].join(" "));
       const cardHay = plain(r.card || "");
@@ -569,7 +618,7 @@ function render(){
   } else { venueBox.hidden=true; venueBox.innerHTML=""; }
 
   const scorerRaw=$("#scorerFilter").value.trim();
-  const scorerTerm=plain(scorerRaw);
+  const scorerTerm=personKey(scorerRaw);
   const scorerBox=$("#scorerRecord");
   const scorerKicker=scorerBox.querySelector(".report-kicker");
   if(scorerTerm){
@@ -577,16 +626,17 @@ function render(){
     const matchedNames=new Map();
     rows.forEach(r => String(r.scorers||"").split(/\n+/).forEach(line=>{
       const name=scorerNameFromLine(line);
-      if(name && plain(name).includes(scorerTerm)){
+      if(name && personKey(name).includes(scorerTerm)){
         goalCount++;
         matchedNames.set(name,(matchedNames.get(name)||0)+1);
       }
     }));
-    const exact=[...matchedNames.entries()].find(([name])=>plain(name)===scorerTerm);
+    const exact=[...matchedNames.entries()].find(([name])=>personKey(name)===scorerTerm);
     const displayName=exact ? exact[0] : scorerRaw;
+    const breakdowns=scorerBreakdowns(rows,scorerTerm);
     scorerKicker.textContent="SCORER RECORD / 得点者個人記録";
     $("#scorerNote").textContent=`${displayName} — 現在の検索条件での得点記録`;
-    $("#scorerRanking").innerHTML=`<div class="scorer-row"><span class="scorer-rank">GOAL</span><strong>${esc(displayName)}</strong><span class="scorer-goals">${goalCount} GOALS</span></div><div class="scorer-empty">${rows.length}試合で得点を記録 / Matches with a recorded goal</div>`;
+    $("#scorerRanking").innerHTML=`<div class="scorer-row"><span class="scorer-rank">GOAL</span><strong>${esc(displayName)}</strong><span class="scorer-goals">${breakdowns.goals} GOALS</span></div><div class="scorer-empty">${rows.length}試合で得点を記録 / Matches with a recorded goal</div><div class="scorer-breakdowns">${breakdownHtml("BY GROUND / 会場別得点",breakdowns.venue)}${breakdownHtml("BY COMPETITION / 大会別得点",breakdowns.competition)}</div>`;
   } else {
     const ranking=scorerRanking(rows).slice(0,10);
     scorerKicker.textContent="GOALS SEEN / 得点者記録";
