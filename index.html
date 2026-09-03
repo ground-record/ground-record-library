@@ -426,6 +426,7 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   <div class="club-record" id="clubRecord" hidden></div>
   <div class="venue-record" id="venueRecord" hidden></div>
   <div class="club-record ground-summary" id="groundSummary" hidden></div>
+  <div class="club-record ground-summary" id="myGroundSummary" hidden></div>
   <div class="scorer-record" id="scorerRecord">
     <div class="report-kicker">GOALS SEEN / 得点者記録</div>
     <div class="scorer-note" id="scorerNote">現在の検索結果に記録された得点者</div>
@@ -910,6 +911,35 @@ function groundSummaryHtml(rows, team){
   const more=stats.length>10?`<button type="button" class="ground-summary-more" id="groundSummaryMore">${showAllGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
   return `<div class="report-kicker">GROUND RECORDS / 会場別観戦戦績</div><div class="scorer-note">${esc(team)} — 会場名をタップすると大会別戦績と試合一覧を開きます。</div><div class="ground-summary-list">${lines}</div>${more}`;
 }
+
+let showAllMyGrounds=false;
+function myGroundStats(rows){
+  const by=new Map();
+  rows.forEach(r=>{
+    const venue=canonicalVenueName(r.venue) || "会場不明";
+    if(!by.has(venue)) by.set(venue,[]);
+    by.get(venue).push(r);
+  });
+  return [...by.entries()].map(([venue,rs])=>({venue,rows:rs,matches:rs.length}))
+    .sort((a,b)=>b.matches-a.matches || a.venue.localeCompare(b.venue,"ja"));
+}
+function myGroundDetailHtml(s){
+  const comps=new Map();
+  s.rows.forEach(r=>{
+    const c=competitionBucket(r.competition) || "大会不明";
+    comps.set(c,(comps.get(c)||0)+1);
+  });
+  const compRows=[...comps.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  const compHtml=compRows.map(([name,n])=>`<div class="ground-competition-row"><span class="comp-name">${esc(name)}</span><span class="comp-num">${n}試合</span></div>`).join("");
+  const matchRows=s.rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0)).map(r=>`<button type="button" class="ground-match-row" data-match-idx="${DATA.indexOf(r)}" aria-label="${esc((r.date_label||r.date||"")+" "+(r.card||"")+" "+(r.score||"")+" の試合詳細を開く")}"><span class="gm-date">${esc(r.date_label||r.date||"—")}</span><span>${esc(r.card||"—")}<br><span style="color:var(--muted)">${esc(competitionBucket(r.competition))}</span></span><span class="gm-score">${esc(r.score||"—")}</span></button>`).join("");
+  return `<div class="ground-detail-head">VISITS BY COMPETITION / 大会別観戦回数</div><div class="ground-competition-list">${compHtml}</div><button type="button" class="ground-match-toggle" aria-expanded="false">この会場の試合一覧を見る（${s.rows.length}試合）</button><div class="ground-match-list" hidden><div class="ground-match-hint">試合をタップすると観戦記録の詳細を開きます。</div>${matchRows}</div>`;
+}
+function myGroundSummaryHtml(rows){
+  const stats=myGroundStats(rows), shown=showAllMyGrounds?stats:stats.slice(0,10);
+  const lines=shown.map((s,i)=>`<div class="ground-summary-item"><button type="button" class="ground-summary-row" aria-expanded="false"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="ground-metric matches">${s.matches}回</span><span class="ground-chevron">＋</span></button><div class="ground-detail" hidden>${myGroundDetailHtml(s)}</div></div>`).join("");
+  const more=stats.length>10?`<button type="button" class="ground-summary-more" id="myGroundSummaryMore">${showAllMyGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
+  return `<div class="report-kicker">MY GROUND RECORDS / 観戦会場ランキング</div><div class="scorer-note">現在の絞り込み条件で、実施設単位の観戦回数を集計。会場名をタップすると大会別回数と試合一覧を開きます。</div><div class="ground-summary-list">${lines}</div>${more}`;
+}
 function activeConditions(){
   const bits=[];
   const q=$("#q").value.trim(), y=$("#year").value, t=selectedTeam, scorer=$("#scorerFilter").value.trim();
@@ -997,6 +1027,33 @@ function render(){
     const moreBtn=$("#groundSummaryMore");
     if(moreBtn) moreBtn.onclick=()=>{showAllGrounds=!showAllGrounds; render(); groundBox.scrollIntoView({behavior:"smooth",block:"start"});};
   } else { groundBox.hidden=true; groundBox.innerHTML=""; showAllGrounds=false; }
+
+  const myGroundBox=$("#myGroundSummary");
+  if(!team && !selectedVenue && !venueSearch.value.trim()){
+    myGroundBox.hidden=false;
+    myGroundBox.innerHTML=myGroundSummaryHtml(rows);
+    myGroundBox.querySelectorAll(".ground-summary-row").forEach(btn=>btn.addEventListener("click",()=>{
+      const item=btn.closest(".ground-summary-item"), detail=item.querySelector(".ground-detail");
+      const opening=detail.hidden;
+      detail.hidden=!opening;
+      item.classList.toggle("open",opening);
+      btn.setAttribute("aria-expanded",String(opening));
+      btn.querySelector(".ground-chevron").textContent=opening?"×":"＋";
+    }));
+    myGroundBox.querySelectorAll(".ground-match-toggle").forEach(btn=>btn.addEventListener("click",()=>{
+      const list=btn.nextElementSibling, opening=list.hidden;
+      list.hidden=!opening;
+      btn.setAttribute("aria-expanded",String(opening));
+      const matchCount=list.querySelectorAll(".ground-match-row").length;
+      btn.textContent=opening?"試合一覧を閉じる":`この会場の試合一覧を見る（${matchCount}試合）`;
+    }));
+    myGroundBox.querySelectorAll(".ground-match-row[data-match-idx]").forEach(btn=>btn.addEventListener("click",()=>{
+      const r=DATA[Number(btn.dataset.matchIdx)];
+      if(r) openDetail(r);
+    }));
+    const moreBtn=$("#myGroundSummaryMore");
+    if(moreBtn) moreBtn.onclick=()=>{showAllMyGrounds=!showAllMyGrounds; render(); myGroundBox.scrollIntoView({behavior:"smooth",block:"start"});};
+  } else { myGroundBox.hidden=true; myGroundBox.innerHTML=""; showAllMyGrounds=false; }
 
   const venueBox=$("#venueRecord");
   const venueTerm=(selectedVenue || venueSearch.value.trim());
