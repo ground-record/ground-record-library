@@ -635,8 +635,8 @@ function render(){
     const displayName=exact ? exact[0] : scorerRaw;
     const breakdowns=scorerBreakdowns(rows,scorerTerm);
     scorerKicker.textContent="SCORER RECORD / 得点者個人記録";
-    $("#scorerNote").textContent=`${displayName} — 現在の検索条件での得点記録`;
-    $("#scorerRanking").innerHTML=`<div class="scorer-row"><span class="scorer-rank">GOAL</span><strong>${esc(displayName)}</strong><span class="scorer-goals">${breakdowns.goals} GOALS</span></div><div class="scorer-empty">${rows.length}試合で得点を記録 / Matches with a recorded goal</div><div class="scorer-breakdowns">${breakdownHtml("BY GROUND / 会場別得点",breakdowns.venue)}${breakdownHtml("BY COMPETITION / 大会別得点",breakdowns.competition)}</div>`;
+    $("#scorerNote").textContent=`${displayName} — 現在の検索条件での得点記録（括弧内のアシスト・所属注記は得点として数えません）`;
+    $("#scorerRanking").innerHTML=`<div class="scorer-row"><span class="scorer-rank">GOAL</span><strong>${esc(displayName)}</strong><span class="scorer-goals">${breakdowns.goals} GOALS</span></div><div class="scorer-empty">${rows.length} SCORING MATCHES / ${rows.length}試合で得点を記録</div><div class="scorer-breakdowns">${breakdownHtml("BY GROUND / 会場別得点",breakdowns.venue)}${breakdownHtml("BY COMPETITION / 大会別得点",breakdowns.competition)}</div>`;
   } else {
     const ranking=scorerRanking(rows).slice(0,10);
     scorerKicker.textContent="GOALS SEEN / 得点者記録";
