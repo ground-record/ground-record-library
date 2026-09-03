@@ -393,10 +393,40 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const plain = s => String(s ?? "").toLowerCase();
 const personKey = s => plain(s).replace(/[\s　]+/g, "").replace(/(?:pk|ＰＫ)$/i, "");
+
+// Team-name cleanup is deliberately separate from the raw archive data.
+// The Excel wording remains untouched; these helpers only control search,
+// dropdown labels and club-record aggregation.
+function repairTeamSides(r){
+  const card=String(r.card||"").trim();
+  if(!card) return;
+  // A hyphen inside U-23 was previously mistaken for the match separator.
+  // Rebuild only those malformed sides from the original card text.
+  const m=card.match(/^(.+?U-23(?:選抜)?)-(.+)$/i);
+  if(m && ((r.home||"").endsWith("U") || String(r.away||"").startsWith("23"))){
+    r.home=m[1].trim();
+    r.away=m[2].trim();
+  }
+}
+DATA.forEach(repairTeamSides);
+
+function canonicalTeamName(name){
+  let s=String(name||"").trim().replace(/[　]+/g," ").replace(/\s+/g," ");
+  if(!s) return "";
+  // Remove trailing competition/status notes that do not define a different team.
+  // Youth/U-23/Legends/era-specific teams are intentionally NOT collapsed.
+  let prev="";
+  while(prev!==s){
+    prev=s;
+    s=s.replace(/\s*[（(]\s*(?:J(?:1|2|3)?|Ｊ(?:１|２|３)?|開催国代表[^）)]*|年間勝ち点[^）)]*|[^）)]*(?:ステージ優勝|リーグ王者|王者)|(?:都|道|府|県|開催国|開催国代表)[^）)]*代表|(?:日本|イタリア|インドネシア|韓国|中国|タイ|ベトナム|オーストラリア))\s*[）)]\s*$/i,"").trim();
+  }
+  return s;
+}
+const teamKey = name => plain(canonicalTeamName(name));
 const numbered = DATA.filter(x => x.no !== null);
 const venues = [...new Set(DATA.map(x=>x.venue).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
 const years = [...new Set(DATA.map(x=>x.year).filter(Boolean))].sort((a,b)=>a-b);
-const teams = [...new Set(DATA.flatMap(x=>[x.home,x.away]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
+const teams = [...new Set(DATA.flatMap(x=>[canonicalTeamName(x.home),canonicalTeamName(x.away)]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
 const latest = DATA.filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
 
 $("#statMatches").textContent = numbered.length.toLocaleString("ja-JP");
@@ -528,10 +558,12 @@ function breakdownHtml(title, rows){
 }
 function clubStats(rows, team){
   let w=0,d=0,l=0,gf=0,ga=0,played=0;
+  const tk=teamKey(team);
   rows.forEach(r=>{
     const s=parseScore(r.score);
-    if(!s || (r.home!==team && r.away!==team)) return;
-    const isHome=r.home===team;
+    const hk=teamKey(r.home), ak=teamKey(r.away);
+    if(!s || (hk!==tk && ak!==tk)) return;
+    const isHome=hk===tk;
     const f=isHome?s[0]:s[1], a=isHome?s[1]:s[0];
     played++; gf+=f; ga+=a;
     if(f>a) w++; else if(f<a) l++; else d++;
@@ -553,14 +585,14 @@ function filtered(){
   const q = plain($("#q").value.trim()), y=$("#year").value, t=$("#team").value, scorer=plain($("#scorerFilter").value.trim());
   return DATA.filter(r => {
     if (y && String(r.year)!==y) return false;
-    if (t && r.home!==t && r.away!==t) return false;
+    if (t && teamKey(r.home)!==teamKey(t) && teamKey(r.away)!==teamKey(t)) return false;
     if (selectedVenue && (r.venue||"").trim() !== selectedVenue) return false;
     if (!selectedVenue && venueSearch.value.trim() && !plain(r.venue||"").includes(plain(venueSearch.value.trim()))) return false;
     if (selectedOccasion && !(r.occasions||[]).includes(selectedOccasion)) return false;
     if (scorer && !String(r.scorers||"").split(/\n+/).some(line => personKey(scorerNameFromLine(line)).includes(personKey(scorer)))) return false;
     if (q) {
       const hay = plain([r.no_label,r.date_label,r.competition,r.round,r.card,r.score,r.scorers,r.seat,r.price,r.ticket_shop,r.venue,r.notes].join(" "));
-      const cardHay = plain(r.card || "");
+      const cardHay = plain([canonicalTeamName(r.home),canonicalTeamName(r.away)].join(" "));
       const teamNames = teams.map(plain);
       const terms = q.split(/\s+/).map(plain).filter(Boolean);
       const ok = terms.every(term => {
