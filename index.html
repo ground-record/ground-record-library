@@ -286,6 +286,15 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .result-ticket{border-top:9px solid var(--oxblood)}
 .club-record{border-top:9px solid var(--green)}
 .venue-record{border-top:9px solid var(--oxblood)}
+.ground-summary{border-top:9px solid var(--green);grid-column:1/-1}
+.ground-summary-list{display:grid;gap:0}
+.ground-summary-row{display:grid;grid-template-columns:34px minmax(150px,1.6fr) repeat(4,minmax(70px,.55fr));gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ddd2bb;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+.ground-summary-row .rank{font:900 9px Arial,sans-serif;color:var(--oxblood)}
+.ground-summary-row .ground{font-weight:800;min-width:0;word-break:break-word}
+.ground-summary-row .stat{text-align:right;white-space:nowrap}
+.ground-summary-row .record{font-weight:900;color:var(--green)}
+.ground-summary-more{margin-top:12px;border:2px solid #81765f;background:#f8f3e6;padding:9px 13px;font:900 9px Arial,sans-serif;letter-spacing:.1em;cursor:pointer}
+@media(max-width:760px){.ground-summary-row{grid-template-columns:26px 1fr auto;gap:7px}.ground-summary-row .gfga,.ground-summary-row .rate{display:none}.ground-summary-row .matches{font-size:9px}.ground-summary-row .record{font-size:9px}}
 .scorer-record{border-top:9px solid var(--brass);grid-column:1/-1}
 .report-kicker{font:900 10px/1.25 "Arial Narrow","Helvetica Neue",Arial,"Yu Gothic",sans-serif;letter-spacing:.16em;color:var(--oxblood);text-transform:uppercase;margin-bottom:12px}
 .result-number{display:flex;align-items:flex-end;gap:10px;border-bottom:1px solid #d3c7ac;padding-bottom:12px}
@@ -367,6 +376,7 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   </div>
   <div class="club-record" id="clubRecord" hidden></div>
   <div class="venue-record" id="venueRecord" hidden></div>
+  <div class="club-record ground-summary" id="groundSummary" hidden></div>
   <div class="scorer-record" id="scorerRecord">
     <div class="report-kicker">GOALS SEEN / 得点者記録</div>
     <div class="scorer-note" id="scorerNote">現在の検索結果に記録された得点者</div>
@@ -668,6 +678,23 @@ function clubStats(rows, team){
   });
   return {matches:rows.length,played,w,d,l,gf,ga,winRate:played?100*w/played:0};
 }
+function groundStats(rows, team){
+  const by=new Map();
+  rows.forEach(r=>{
+    const venue=(r.venue||"会場不明").trim() || "会場不明";
+    if(!by.has(venue)) by.set(venue,[]);
+    by.get(venue).push(r);
+  });
+  return [...by.entries()].map(([venue,rs])=>({venue,...clubStats(rs,team)}))
+    .sort((a,b)=>b.matches-a.matches || b.w-a.w || a.venue.localeCompare(b.venue,"ja"));
+}
+let showAllGrounds=false;
+function groundSummaryHtml(rows, team){
+  const stats=groundStats(rows,team), shown=showAllGrounds?stats:stats.slice(0,10);
+  const lines=shown.map((s,i)=>`<div class="ground-summary-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="stat matches">${s.matches}試合</span><span class="stat record">${s.w}勝${s.d}分${s.l}敗</span><span class="stat gfga">${s.gf}-${s.ga}</span><span class="stat rate">${s.winRate.toFixed(1)}%</span></div>`).join("");
+  const more=stats.length>10?`<button type="button" class="ground-summary-more" id="groundSummaryMore">${showAllGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
+  return `<div class="report-kicker">GROUND RECORDS / 会場別観戦戦績</div><div class="scorer-note">${esc(team)} — 現在の絞り込み条件に含まれる試合を会場別に集計（試合数順）</div><div class="ground-summary-list">${lines}</div>${more}`;
+}
 function activeConditions(){
   const bits=[];
   const q=$("#q").value.trim(), y=$("#year").value, t=selectedTeam, scorer=$("#scorerFilter").value.trim();
@@ -728,6 +755,14 @@ function render(){
       </div>
       <div class="club-note">選択クラブ目線で、現在の絞り込み条件に含まれる試合を集計。${missing>0?`スコア未記録 ${missing}試合は勝敗・得失点計算から除外。`:""}</div>`;
   } else { clubBox.hidden=true; clubBox.innerHTML=""; }
+
+  const groundBox=$("#groundSummary");
+  if(team && !selectedVenue && !venueSearch.value.trim()){
+    groundBox.hidden=false;
+    groundBox.innerHTML=groundSummaryHtml(rows,team);
+    const moreBtn=$("#groundSummaryMore");
+    if(moreBtn) moreBtn.onclick=()=>{showAllGrounds=!showAllGrounds; render(); groundBox.scrollIntoView({behavior:"smooth",block:"start"});};
+  } else { groundBox.hidden=true; groundBox.innerHTML=""; showAllGrounds=false; }
 
   const venueBox=$("#venueRecord");
   const venueTerm=(selectedVenue || venueSearch.value.trim());
