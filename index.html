@@ -568,12 +568,34 @@ function render(){
       <div class="club-note">選択クラブの、この会場条件における現地観戦戦績。${missing>0?`スコア未記録 ${missing}試合は勝敗・得失点計算から除外。`:""}</div>`;
   } else { venueBox.hidden=true; venueBox.innerHTML=""; }
 
-  const ranking=scorerRanking(rows).slice(0,10);
-  $("#scorerNote").textContent = team
-    ? `現在の検索結果に記録された得点者（${team}の対戦相手を含む）`
-    : "現在の検索結果に記録された得点者";
-  $("#scorerRanking").innerHTML = ranking.length ? ranking.map(([name,n],i)=>`<div class="scorer-row"><span class="scorer-rank">${String(i+1).padStart(2,"0")}</span><button type="button" data-scorer="${esc(name)}">${esc(name)}</button><span class="scorer-goals">${n} GOALS</span></div>`).join("") : `<div class="scorer-empty">得点者データがありません。</div>`;
-  $("#scorerRanking").querySelectorAll("[data-scorer]").forEach(btn=>btn.onclick=()=>{ $("#scorerFilter").value=btn.dataset.scorer; render(); $("#searchReport").scrollIntoView({behavior:"smooth",block:"start"}); });
+  const scorerRaw=$("#scorerFilter").value.trim();
+  const scorerTerm=plain(scorerRaw);
+  const scorerBox=$("#scorerRecord");
+  const scorerKicker=scorerBox.querySelector(".report-kicker");
+  if(scorerTerm){
+    let goalCount=0;
+    const matchedNames=new Map();
+    rows.forEach(r => String(r.scorers||"").split(/\n+/).forEach(line=>{
+      const name=scorerNameFromLine(line);
+      if(name && plain(name).includes(scorerTerm)){
+        goalCount++;
+        matchedNames.set(name,(matchedNames.get(name)||0)+1);
+      }
+    }));
+    const exact=[...matchedNames.entries()].find(([name])=>plain(name)===scorerTerm);
+    const displayName=exact ? exact[0] : scorerRaw;
+    scorerKicker.textContent="SCORER RECORD / 得点者個人記録";
+    $("#scorerNote").textContent=`${displayName} — 現在の検索条件での得点記録`;
+    $("#scorerRanking").innerHTML=`<div class="scorer-row"><span class="scorer-rank">GOAL</span><strong>${esc(displayName)}</strong><span class="scorer-goals">${goalCount} GOALS</span></div><div class="scorer-empty">${rows.length}試合で得点を記録 / Matches with a recorded goal</div>`;
+  } else {
+    const ranking=scorerRanking(rows).slice(0,10);
+    scorerKicker.textContent="GOALS SEEN / 得点者記録";
+    $("#scorerNote").textContent = team
+      ? `現在の検索結果に記録された得点者（${team}の対戦相手を含む）`
+      : "現在の検索結果に記録された得点者";
+    $("#scorerRanking").innerHTML = ranking.length ? ranking.map(([name,n],i)=>`<div class="scorer-row"><span class="scorer-rank">${String(i+1).padStart(2,"0")}</span><button type="button" data-scorer="${esc(name)}">${esc(name)}</button><span class="scorer-goals">${n} GOALS</span></div>`).join("") : `<div class="scorer-empty">得点者データがありません。</div>`;
+    $("#scorerRanking").querySelectorAll("[data-scorer]").forEach(btn=>btn.onclick=()=>{ $("#scorerFilter").value=btn.dataset.scorer; render(); $("#searchReport").scrollIntoView({behavior:"smooth",block:"start"}); });
+  }
   $("#empty").hidden = rows.length !== 0;
   $("#tbody").innerHTML = rows.map((r,i)=>`<tr class="match" data-idx="${DATA.indexOf(r)}">
     <td class="no">${esc(r.no_label || "—")}</td>
