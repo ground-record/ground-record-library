@@ -291,10 +291,17 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .ground-summary-row{display:grid;grid-template-columns:34px minmax(150px,1.6fr) repeat(4,minmax(70px,.55fr));gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #ddd2bb;font:700 10px/1.35 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 .ground-summary-row .rank{font:900 9px Arial,sans-serif;color:var(--oxblood)}
 .ground-summary-row .ground{font-weight:800;min-width:0;word-break:break-word}
-.ground-summary-row .stat{text-align:right;white-space:nowrap}
+.ground-summary-row .ground-metric{text-align:right;white-space:nowrap}
 .ground-summary-row .record{font-weight:900;color:var(--green)}
 .ground-summary-more{margin-top:12px;border:2px solid #81765f;background:#f8f3e6;padding:9px 13px;font:900 9px Arial,sans-serif;letter-spacing:.1em;cursor:pointer}
-@media(max-width:760px){.ground-summary-row{grid-template-columns:26px 1fr auto;gap:7px}.ground-summary-row .gfga,.ground-summary-row .rate{display:none}.ground-summary-row .matches{font-size:9px}.ground-summary-row .record{font-size:9px}}
+@media(max-width:760px){
+.ground-summary-row{grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:"rank ground matches" "rank record record";column-gap:7px;row-gap:3px;padding:10px 0}
+.ground-summary-row .rank{grid-area:rank;align-self:start;padding-top:2px}
+.ground-summary-row .ground{grid-area:ground;font-size:11px;line-height:1.35}
+.ground-summary-row .matches{grid-area:matches;font-size:9px;align-self:start}
+.ground-summary-row .record{grid-area:record;text-align:left;font-size:9px}
+.ground-summary-row .gfga,.ground-summary-row .rate{display:none}
+}
 .scorer-record{border-top:9px solid var(--brass);grid-column:1/-1}
 .report-kicker{font:900 10px/1.25 "Arial Narrow","Helvetica Neue",Arial,"Yu Gothic",sans-serif;letter-spacing:.16em;color:var(--oxblood);text-transform:uppercase;margin-bottom:12px}
 .result-number{display:flex;align-items:flex-end;gap:10px;border-bottom:1px solid #d3c7ac;padding-bottom:12px}
@@ -479,8 +486,64 @@ function canonicalTeamName(name){
   return s;
 }
 const teamKey = name => plain(canonicalTeamName(name));
+
+// Venue normalization: keep each match's historical venue label for display,
+// but treat naming-rights / spelling variants of the same physical facility as one ground.
+function venueAliasKey(name){
+  return String(name||"").normalize("NFKC").toLowerCase().replace(/[\s　]/g,"").replace(/[()（）]/g,"");
+}
+function canonicalVenueName(name){
+  const raw=String(name||"").replace(/\s+/g," ").trim();
+  if(!raw) return "";
+  const key=venueAliasKey(raw);
+  const aliases=new Map([
+    [venueAliasKey("カシマサッカースタジアム"),"カシマサッカースタジアム"],
+    [venueAliasKey("メルカリスタジアム (※カシマサッカースタジアム)"),"カシマサッカースタジアム"],
+
+    [venueAliasKey("東京スタジアム"),"味の素スタジアム"],
+    [venueAliasKey("味の素スタジアム"),"味の素スタジアム"],
+
+    [venueAliasKey("日産スタジアム"),"日産スタジアム"],
+    [venueAliasKey("横浜国際総合競技場(日産スタジアム)"),"日産スタジアム"],
+
+    [venueAliasKey("市立吹田サッカースタジアム"),"パナソニックスタジアム吹田"],
+    [venueAliasKey("パナソニックスタジアム吹田"),"パナソニックスタジアム吹田"],
+
+    [venueAliasKey("Shonan BMW スタジアム平塚"),"平塚競技場"],
+    [venueAliasKey("レモンガススタジアム平塚"),"平塚競技場"],
+
+    [venueAliasKey("等々力陸上競技場"),"等々力陸上競技場"],
+    [venueAliasKey("Uvanceとどろきスタジアム by Fujitsu"),"等々力陸上競技場"],
+
+    [venueAliasKey("ベストアメニティスタジアム"),"鳥栖スタジアム"],
+    [venueAliasKey("駅前不動産スタジアム"),"鳥栖スタジアム"],
+
+    [venueAliasKey("広島ビッグアーチ"),"広島広域公園陸上競技場"],
+    [venueAliasKey("エディオンスタジアム広島"),"広島広域公園陸上競技場"],
+
+    [venueAliasKey("東北電力ビッグスワンスタジアム"),"新潟スタジアム（ビッグスワン）"],
+    [venueAliasKey("デンカビッグスワンスタジアム"),"新潟スタジアム（ビッグスワン）"],
+
+    [venueAliasKey("IAIスタジアム日本平"),"IAIスタジアム日本平"],
+    [venueAliasKey("ＩＡＩスタジアム日本平"),"IAIスタジアム日本平"],
+
+    [venueAliasKey("大分銀行ドーム"),"大分スポーツ公園総合競技場"],
+    [venueAliasKey("昭和電工ドーム大分"),"大分スポーツ公園総合競技場"],
+
+    [venueAliasKey("相模原麻溝公園競技場"),"相模原麻溝公園競技場"],
+    [venueAliasKey("相模原ギオンスタジアム"),"相模原麻溝公園競技場"],
+
+    [venueAliasKey("エコパスタジアム"),"静岡スタジアム エコパ"],
+    [venueAliasKey("静岡スタジアムエコパ"),"静岡スタジアム エコパ"],
+
+    [venueAliasKey("府中市立総合体育館"),"郷土の森総合体育館（府中市立総合体育館）"],
+    [venueAliasKey("郷土の森府中市立総合体育館"),"郷土の森総合体育館（府中市立総合体育館）"]
+  ]);
+  return aliases.get(key) || raw;
+}
+const venueKey = name => plain(canonicalVenueName(name));
 const numbered = DATA.filter(x => x.no !== null);
-const venues = [...new Set(DATA.map(x=>x.venue).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
+const venues = [...new Set(DATA.map(x=>canonicalVenueName(x.venue)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
 const years = [...new Set(DATA.map(x=>x.year).filter(Boolean))].sort((a,b)=>a-b);
 const teams = [...new Set(DATA.flatMap(x=>[canonicalTeamName(x.home),canonicalTeamName(x.away)]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"ja"));
 const latest = DATA.filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
@@ -651,7 +714,7 @@ function scorerBreakdowns(rows, scorerTerm){
       const name=scorerNameFromLine(line);
       if(!name || !personKey(name).includes(scorerTerm)) return;
       goals++;
-      const v=(r.venue||"").trim() || "会場不明";
+      const v=canonicalVenueName(r.venue) || "会場不明";
       const c=competitionBucket(r.competition);
       venue.set(v,(venue.get(v)||0)+1);
       competition.set(c,(competition.get(c)||0)+1);
@@ -681,7 +744,7 @@ function clubStats(rows, team){
 function groundStats(rows, team){
   const by=new Map();
   rows.forEach(r=>{
-    const venue=(r.venue||"会場不明").trim() || "会場不明";
+    const venue=canonicalVenueName(r.venue) || "会場不明";
     if(!by.has(venue)) by.set(venue,[]);
     by.get(venue).push(r);
   });
@@ -691,7 +754,7 @@ function groundStats(rows, team){
 let showAllGrounds=false;
 function groundSummaryHtml(rows, team){
   const stats=groundStats(rows,team), shown=showAllGrounds?stats:stats.slice(0,10);
-  const lines=shown.map((s,i)=>`<div class="ground-summary-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="stat matches">${s.matches}試合</span><span class="stat record">${s.w}勝${s.d}分${s.l}敗</span><span class="stat gfga">${s.gf}-${s.ga}</span><span class="stat rate">${s.winRate.toFixed(1)}%</span></div>`).join("");
+  const lines=shown.map((s,i)=>`<div class="ground-summary-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="ground">${esc(s.venue)}</span><span class="ground-metric matches">${s.matches}試合</span><span class="ground-metric record">${s.w}勝${s.d}分${s.l}敗</span><span class="ground-metric gfga">${s.gf}-${s.ga}</span><span class="ground-metric rate">${s.winRate.toFixed(1)}%</span></div>`).join("");
   const more=stats.length>10?`<button type="button" class="ground-summary-more" id="groundSummaryMore">${showAllGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
   return `<div class="report-kicker">GROUND RECORDS / 会場別観戦戦績</div><div class="scorer-note">${esc(team)} — 現在の絞り込み条件に含まれる試合を会場別に集計（試合数順）</div><div class="ground-summary-list">${lines}</div>${more}`;
 }
@@ -711,12 +774,12 @@ function filtered(){
   return DATA.filter(r => {
     if (y && String(r.year)!==y) return false;
     if (t && teamKey(r.home)!==teamKey(t) && teamKey(r.away)!==teamKey(t)) return false;
-    if (selectedVenue && (r.venue||"").trim() !== selectedVenue) return false;
-    if (!selectedVenue && venueSearch.value.trim() && !plain(r.venue||"").includes(plain(venueSearch.value.trim()))) return false;
+    if (selectedVenue && venueKey(r.venue) !== venueKey(selectedVenue)) return false;
+    if (!selectedVenue && venueSearch.value.trim() && !plain([r.venue,canonicalVenueName(r.venue)].join(" ")).includes(plain(venueSearch.value.trim()))) return false;
     if (selectedOccasion && !(r.occasions||[]).includes(selectedOccasion)) return false;
     if (scorer && !String(r.scorers||"").split(/\n+/).some(line => personKey(scorerNameFromLine(line)).includes(personKey(scorer)))) return false;
     if (q) {
-      const hay = plain([r.no_label,r.date_label,r.competition,r.round,r.card,r.score,r.scorers,r.seat,r.price,r.ticket_shop,r.venue,r.notes].join(" "));
+      const hay = plain([r.no_label,r.date_label,r.competition,r.round,r.card,r.score,r.scorers,r.seat,r.price,r.ticket_shop,r.venue,canonicalVenueName(r.venue),r.notes].join(" "));
       const cardHay = plain([canonicalTeamName(r.home),canonicalTeamName(r.away)].join(" "));
       const teamNames = teams.map(plain);
       const terms = q.split(/\s+/).map(plain).filter(Boolean);
