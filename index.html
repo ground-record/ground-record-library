@@ -368,6 +368,35 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 @media(max-width:900px){.search-report{grid-template-columns:1fr 1fr}.scorer-record{grid-column:1/-1}}
 @media(max-width:760px){.search-report{grid-template-columns:1fr;gap:8px;margin-top:20px}.scorer-record{grid-column:auto}.result-ticket,.club-record,.venue-record,.scorer-record{box-shadow:4px 4px 0 rgba(23,61,50,.1);padding:16px}.club-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.club-cell:nth-child(5){grid-column:1 / -1}.club-cell b{font-size:clamp(17px,6.1vw,25px);line-height:1.05}.club-cell span{font-size:8px}.scorer-search-row{max-width:none}.meta{margin-top:18px}}
 
+
+/* v7.0 — compact record list + ticket archive */
+.records-toggle-wrap{margin:18px 0 16px;display:flex;justify-content:center}
+.records-toggle{appearance:none;border:2px solid var(--line);background:var(--paper);color:var(--ink);font-family:inherit;font-weight:800;letter-spacing:.08em;padding:14px 22px;cursor:pointer;box-shadow:4px 4px 0 rgba(31,45,38,.14)}
+.records-toggle:hover{transform:translateY(-1px)}
+.records-collapsed-note{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+.ticket-archive .ticket-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line);border-left:1px solid var(--line);margin-top:14px}
+.ticket-archive .ticket-cell{padding:14px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.ticket-archive .ticket-cell b{display:block;font-size:25px;line-height:1.05;font-family:Georgia,'Times New Roman',serif}
+.ticket-archive .ticket-cell span{display:block;margin-top:5px;font-size:10px;letter-spacing:.09em;color:var(--muted);font-weight:800}
+.ticket-archive .ticket-note{font-size:12px;line-height:1.65;color:var(--muted);margin-top:10px}
+.ticket-expand{appearance:none;width:100%;margin-top:12px;padding:11px 12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:800;letter-spacing:.06em;cursor:pointer}
+.ticket-detail{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.ticket-subhead{font-size:11px;letter-spacing:.12em;font-weight:900;color:var(--oxblood);margin:10px 0 6px}
+.ticket-source-row,.ticket-extreme{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(116,109,84,.28);font-size:13px}
+.ticket-source-row .rank{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.ticket-source-row .num{font-weight:800;white-space:nowrap}
+.ticket-extreme{grid-template-columns:88px 1fr auto;width:100%;border-left:0;border-right:0;border-top:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.ticket-extreme strong{font-size:12px;letter-spacing:.08em;color:var(--oxblood)}
+.ticket-extreme .price{font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:800;white-space:nowrap}
+@media(max-width:720px){
+  .ticket-archive .ticket-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ticket-archive .ticket-cell b{font-size:22px}
+  .ticket-source-row{grid-template-columns:34px 1fr auto}
+  .ticket-extreme{grid-template-columns:72px 1fr;gap:6px 10px}
+  .ticket-extreme .price{grid-column:2}
+  .records-toggle{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -427,6 +456,7 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   <div class="venue-record" id="venueRecord" hidden></div>
   <div class="club-record ground-summary" id="groundSummary" hidden></div>
   <div class="club-record ground-summary" id="myGroundSummary" hidden></div>
+  <div class="club-record ticket-archive" id="ticketArchive" hidden></div>
   <div class="scorer-record" id="scorerRecord">
     <div class="report-kicker">GOALS SEEN / 得点者記録</div>
     <div class="scorer-note" id="scorerNote">現在の検索結果に記録された得点者</div>
@@ -434,7 +464,9 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   </div>
 </section>
 
-<div class="meta"><span id="count"></span><span>記録を選ぶと閲覧票を開きます / Open a catalogue record</span></div>
+<div class="records-toggle-wrap"><button type="button" class="records-toggle" id="recordsToggle" aria-expanded="false">OPEN ALL RECORDS / 全試合を表示</button></div>
+<div class="records-collapsed-note" id="recordsCollapsedNote">検索条件がないときは試合一覧を閉じています。</div>
+<div class="meta" id="matchMeta"><span id="count"></span><span>記録を選ぶと閲覧票を開きます / Open a catalogue record</span></div>
 
 <div id="desktop">
 <table>
@@ -940,6 +972,95 @@ function myGroundSummaryHtml(rows){
   const more=stats.length>10?`<button type="button" class="ground-summary-more" id="myGroundSummaryMore">${showAllMyGrounds?"TOP 10に戻す":"全会場を見る（"+stats.length+"会場）"}</button>`:"";
   return `<div class="report-kicker">MY GROUND RECORDS / 観戦会場ランキング</div><div class="scorer-note">現在の絞り込み条件で、実施設単位の観戦回数を集計。会場名をタップすると大会別回数と試合一覧を開きます。</div><div class="ground-summary-list">${lines}</div>${more}`;
 }
+let showAllRecords=false;
+let showTicketDetails=false;
+
+function hasActiveFilters(){
+  return !!(
+    $("#q").value.trim() || $("#year").value || selectedTeam || selectedVenue ||
+    venueSearch.value.trim() || selectedOccasion || $("#scorerFilter").value.trim()
+  );
+}
+function ticketPriceBucket(value){
+  const t=String(value||"").trim();
+  if(!t) return "blank";
+  if(t.includes("不明")) return "unknown";
+  if(t.includes("シーズンチケット")) return "season";
+  if(t.includes("無料") || t.includes("招待券")) return "free";
+  if(/(?:KRW|AUD|THB|CNY|TRY)/i.test(t)) return "foreign";
+  if(/\d[\d,]*\s*円/.test(t) || /^\s*\d+\s*(?:\(|（|$)/.test(t)) return "jpy";
+  return "other";
+}
+function ticketJpyValue(value){
+  if(ticketPriceBucket(value)!=="jpy") return null;
+  const t=String(value||"").replace(/,/g,"");
+  let m=t.match(/(\d+)\s*円/);
+  if(!m) m=t.match(/^\s*(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+function ticketSourceGroup(value){
+  const t=String(value||"").trim();
+  if(!t) return "記録なし";
+  if(t.includes("不明")) return "不明";
+  if(t.includes("シーズンチケット")) return "シーズンチケット";
+  if(t.includes("Jリーグチケット")) return "Jリーグチケット";
+  if(t.includes("セブン")) return "セブンイレブン";
+  if(t.includes("ファミリーマート")) return "ファミリーマート";
+  if(t.includes("ローソン")) return "ローソン";
+  if(t.includes("チケットぴあ") || t.includes("ぴあ株式会社") || t==="ぴあ") return "チケットぴあ";
+  if(/Livepocket/i.test(t)) return "LivePocket";
+  if(t.includes("オフィシャル")) return "オフィシャル";
+  if(t.includes("当日券")) return "当日券";
+  if(t.includes("招待券") || t.includes("無料観戦券")) return "招待・無料券";
+  if(t.includes("チケットアライアンス")) return "チケットアライアンス";
+  if(t.includes("ダフ屋")) return "その他（非公式）";
+  return "その他";
+}
+function ticketStats(rows){
+  const buckets={jpy:0,season:0,free:0,foreign:0,unknown:0,blank:0,other:0};
+  const jpy=[];
+  const sources=new Map();
+  let highest=null, lowest=null, priceRecorded=0;
+  rows.forEach(r=>{
+    const b=ticketPriceBucket(r.price); buckets[b]=(buckets[b]||0)+1;
+    if(String(r.price||"").trim()) priceRecorded++;
+    const v=ticketJpyValue(r.price);
+    if(v!==null){
+      jpy.push(v);
+      if(!highest || v>highest.value) highest={value:v,row:r};
+      if(!lowest || v<lowest.value) lowest={value:v,row:r};
+    }
+    const sg=ticketSourceGroup(r.ticket_shop);
+    sources.set(sg,(sources.get(sg)||0)+1);
+  });
+  jpy.sort((a,b)=>a-b);
+  const sum=jpy.reduce((a,b)=>a+b,0);
+  const avg=jpy.length?Math.round(sum/jpy.length):0;
+  const med=jpy.length?(jpy.length%2?jpy[(jpy.length-1)/2]:Math.round((jpy[jpy.length/2-1]+jpy[jpy.length/2])/2)):0;
+  return {buckets,jpyCount:jpy.length,sum,avg,med,highest,lowest,priceRecorded,
+    sources:[...sources.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"))};
+}
+function ticketArchiveHtml(rows){
+  const s=ticketStats(rows), fmt=n=>Number(n||0).toLocaleString("ja-JP");
+  const sourceRows=s.sources.filter(([name])=>name!=="記録なし" && name!=="不明").slice(0,10).map(([name,n],i)=>`<div class="ticket-source-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span>${esc(name)}</span><span class="num">${n}回</span></div>`).join("");
+  const extreme=(label,x)=>x?`<button type="button" class="ticket-extreme" data-ticket-match="${DATA.indexOf(x.row)}"><strong>${label}</strong><span>${esc((x.row.date_label||"")+" "+(x.row.card||""))}</span><span class="price">¥${fmt(x.value)}</span></button>`:"";
+  const details=`<div class="ticket-detail" ${showTicketDetails?"":"hidden"}><div class="ticket-subhead">TICKET SOURCES / 発券・入手方法</div>${sourceRows}<div class="ticket-subhead">PRICE EXTREMES / 単試合価格</div>${extreme("HIGHEST",s.highest)}${extreme("LOWEST",s.lowest)}</div>`;
+  return `<div class="report-kicker">TICKET ARCHIVE / チケット記録</div>
+    <div class="scorer-note">現在の絞り込み条件に含まれるチケット情報。金額集計は日本円の単試合価格のみで、シーズンチケット・無料/招待・外貨・不明は除外。価格欄に複数金額の注記がある場合は先頭の価格を採用。</div>
+    <div class="ticket-grid">
+      <div class="ticket-cell"><b>¥${fmt(s.sum)}</b><span>RECORDED TOTAL / 単試合価格合計</span></div>
+      <div class="ticket-cell"><b>¥${fmt(s.avg)}</b><span>AVERAGE / 平均</span></div>
+      <div class="ticket-cell"><b>¥${fmt(s.med)}</b><span>MEDIAN / 中央値</span></div>
+      <div class="ticket-cell"><b>${s.jpyCount}</b><span>PAID JPY / 円価格記録</span></div>
+      <div class="ticket-cell"><b>${s.buckets.season}</b><span>SEASON TICKET / シーズン券</span></div>
+      <div class="ticket-cell"><b>${s.buckets.free}</b><span>FREE · INVITED / 無料・招待</span></div>
+      <div class="ticket-cell"><b>${s.buckets.foreign}</b><span>FOREIGN CURRENCY / 外貨</span></div>
+      <div class="ticket-cell"><b>${s.priceRecorded}</b><span>PRICE ENTRIES / 価格欄記録</span></div>
+    </div>
+    <div class="ticket-note">発券店は具体的な店舗名ではなく、コンビニチェーン・公式販売・QR発券などの単位にまとめて集計しています。</div>
+    <button type="button" class="ticket-expand" id="ticketExpand" aria-expanded="${showTicketDetails}">${showTicketDetails?"DETAILSを閉じる":"DETAILS / 発券方法・最高/最低価格を見る"}</button>${details}`;
+}
+
 function activeConditions(){
   const bits=[];
   const q=$("#q").value.trim(), y=$("#year").value, t=selectedTeam, scorer=$("#scorerFilter").value.trim();
@@ -1055,6 +1176,17 @@ function render(){
     if(moreBtn) moreBtn.onclick=()=>{showAllMyGrounds=!showAllMyGrounds; render(); myGroundBox.scrollIntoView({behavior:"smooth",block:"start"});};
   } else { myGroundBox.hidden=true; myGroundBox.innerHTML=""; showAllMyGrounds=false; }
 
+  const ticketBox=$("#ticketArchive");
+  if(rows.length){
+    ticketBox.hidden=false;
+    ticketBox.innerHTML=ticketArchiveHtml(rows);
+    const ticketExpand=$("#ticketExpand");
+    if(ticketExpand) ticketExpand.onclick=()=>{showTicketDetails=!showTicketDetails; render(); ticketBox.scrollIntoView({behavior:"smooth",block:"start"});};
+    ticketBox.querySelectorAll("[data-ticket-match]").forEach(btn=>btn.onclick=()=>{
+      const r=DATA[Number(btn.dataset.ticketMatch)]; if(r) openDetail(r);
+    });
+  } else { ticketBox.hidden=true; ticketBox.innerHTML=""; showTicketDetails=false; }
+
   const venueBox=$("#venueRecord");
   const venueTerm=(selectedVenue || venueSearch.value.trim());
   if(team && venueTerm){
@@ -1102,7 +1234,15 @@ function render(){
     $("#scorerRanking").innerHTML = ranking.length ? ranking.map(([name,n],i)=>`<div class="scorer-row"><span class="scorer-rank">${String(i+1).padStart(2,"0")}</span><button type="button" data-scorer="${esc(name)}">${esc(name)}</button><span class="scorer-goals">${n} GOALS</span></div>`).join("") : `<div class="scorer-empty">得点者データがありません。</div>`;
     $("#scorerRanking").querySelectorAll("[data-scorer]").forEach(btn=>btn.onclick=()=>{ $("#scorerFilter").value=btn.dataset.scorer; render(); $("#searchReport").scrollIntoView({behavior:"smooth",block:"start"}); });
   }
-  $("#empty").hidden = rows.length !== 0;
+  const active=hasActiveFilters();
+  const showMatches=active || showAllRecords;
+  const toggle=$("#recordsToggle"), collapsedNote=$("#recordsCollapsedNote"), meta=$("#matchMeta"), desktop=$("#desktop"), mobile=$("#mobile");
+  toggle.setAttribute("aria-expanded",String(showMatches));
+  toggle.textContent=showMatches ? "CLOSE RECORDS / 試合一覧を閉じる" : `OPEN ALL RECORDS / 全${rows.length.toLocaleString("ja-JP")}試合を表示`;
+  collapsedNote.hidden=showMatches;
+  meta.hidden=!showMatches; desktop.hidden=!showMatches; mobile.hidden=!showMatches;
+  $("#empty").hidden = rows.length !== 0 || !showMatches;
+  if(!showMatches){ $("#tbody").innerHTML=""; $("#mobile").innerHTML=""; return; }
   $("#tbody").innerHTML = rows.map((r,i)=>`<tr class="match" data-idx="${DATA.indexOf(r)}">
     <td class="no">${esc(r.no_label || "—")}</td>
     <td>${esc(r.date_label)}</td>
@@ -1136,6 +1276,17 @@ function openDetail(r){
 }
 $("#close").onclick=()=>$("#dialog").close();
 $("#dialog").addEventListener("click",e=>{ if(e.target===$("#dialog")) $("#dialog").close(); });
+$("#recordsToggle").onclick=()=>{
+  if(hasActiveFilters()){
+    // Filtered results are auto-open; the button can still collapse them until the next filter change.
+    showAllRecords=false;
+    const desktop=$("#desktop"), mobile=$("#mobile"), meta=$("#matchMeta"), note=$("#recordsCollapsedNote"), btn=$("#recordsToggle");
+    const isOpen=!desktop.hidden;
+    desktop.hidden=isOpen; mobile.hidden=isOpen; meta.hidden=isOpen; note.hidden=!isOpen;
+    btn.setAttribute("aria-expanded",String(!isOpen));
+    btn.textContent=isOpen?`OPEN RESULTS / ${filtered().length.toLocaleString("ja-JP")}件を表示`:"CLOSE RECORDS / 試合一覧を閉じる";
+  } else { showAllRecords=!showAllRecords; render(); }
+};
 ["q","scorerFilter"].forEach(id=>$("#"+id).addEventListener("input",render));
 render();
 </script>
