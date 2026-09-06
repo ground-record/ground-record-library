@@ -403,6 +403,10 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
 .ticket-year-row .year{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:900}
 .ticket-year-row .money{font-family:Georgia,'Times New Roman',serif;font-weight:800;white-space:nowrap}
 .ticket-year-row .count{color:var(--muted);white-space:nowrap}
+.ticket-year-button{appearance:none;width:100%;border:0;background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.ticket-year-button:hover,.ticket-year-button:focus-visible{background:rgba(23,61,50,.045);outline:2px solid var(--green);outline-offset:-2px}
+.ticket-year-button[aria-expanded="true"]{background:rgba(116,40,42,.055);box-shadow:inset 4px 0 0 var(--oxblood)}
+.ticket-year-match-wrap{margin:0 0 8px;padding-left:12px;border-left:2px solid rgba(116,40,42,.18)}
 .ticket-match-list{max-height:430px;overflow:auto;border-top:1px solid rgba(116,109,84,.28)}
 .ticket-match-row{appearance:none;width:100%;display:grid;grid-template-columns:92px 1fr auto;gap:10px;align-items:start;padding:9px 0;border:0;border-bottom:1px solid rgba(116,109,84,.25);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
 .ticket-match-row:hover{background:rgba(23,61,50,.045)}
@@ -426,6 +430,53 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   .ticket-match-row{grid-template-columns:70px 1fr;gap:6px 9px}
   .ticket-match-row .tm-price{grid-column:2}
   .ticket-stat-strip{grid-template-columns:1fr}
+}
+
+
+/* v7.3 — seat archive / historical seat-name analysis */
+.seat-archive{grid-column:1/-1}
+.seat-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);margin-top:14px}
+.seat-overview>div{padding:13px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.seat-overview b{display:block;font:800 24px/1.05 Georgia,'Times New Roman',serif}
+.seat-overview span{display:block;margin-top:5px;font-size:9px;line-height:1.35;letter-spacing:.09em;color:var(--muted);font-weight:800}
+.seat-axis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.seat-axis{border-top:2px solid var(--green);padding-top:9px;min-width:0}
+.seat-axis-title{font-size:10px;letter-spacing:.14em;font-weight:900;color:var(--oxblood);margin-bottom:5px}
+.seat-axis-note{font-size:10px;line-height:1.45;color:var(--muted);margin-bottom:5px}
+.seat-axis-row{appearance:none;width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 7px;border:0;border-bottom:1px solid rgba(116,109,84,.28);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer;position:relative}
+.seat-axis-row:hover,.seat-axis-row:focus-visible{background:rgba(23,61,50,.045);outline:2px solid var(--green);outline-offset:-2px}
+.seat-axis-row[aria-expanded="true"]{background:rgba(116,40,42,.055);box-shadow:inset 4px 0 0 var(--oxblood)}
+.seat-axis-row .seat-label{font-size:11px;font-weight:900;letter-spacing:.04em;min-width:0}
+.seat-axis-row .seat-count{font:800 12px Georgia,'Times New Roman',serif;white-space:nowrap}
+.seat-axis-row .seat-bar{grid-column:1/-1;height:3px;background:rgba(31,45,38,.09);overflow:hidden}
+.seat-axis-row .seat-bar>i{display:block;height:100%;background:var(--green)}
+.seat-drill{margin-top:14px;border:1px solid var(--line);padding:14px;background:rgba(255,255,255,.17)}
+.seat-drill-head{font-size:12px;letter-spacing:.12em;font-weight:900;color:var(--oxblood);margin-bottom:3px}
+.seat-drill-note{font-size:10px;line-height:1.55;color:var(--muted);margin-bottom:8px}
+.seat-match-list{max-height:430px;overflow:auto;border-top:1px solid rgba(116,109,84,.28)}
+.seat-match-row{appearance:none;width:100%;display:grid;grid-template-columns:92px minmax(0,1fr) minmax(90px,180px);gap:10px;align-items:start;padding:9px 0;border:0;border-bottom:1px solid rgba(116,109,84,.25);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.seat-match-row:hover{background:rgba(23,61,50,.045)}
+.seat-match-row .sm-date{font-size:10px;color:var(--muted)}
+.seat-match-row .sm-card{font-size:12px;font-weight:800;line-height:1.35}
+.seat-match-row .sm-seat{font-size:10px;line-height:1.35;color:var(--oxblood);font-weight:800;text-align:right;white-space:pre-line}
+.seat-originals{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.seat-original-head{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:6px}
+.seat-original-title{font-size:11px;letter-spacing:.12em;font-weight:900;color:var(--oxblood)}
+.seat-original-count{font-size:10px;color:var(--muted);font-weight:800}
+.seat-name-row{appearance:none;width:100%;display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:8px;align-items:start;padding:7px 5px;border:0;border-bottom:1px solid rgba(116,109,84,.24);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.seat-name-row:hover,.seat-name-row:focus-visible{background:rgba(23,61,50,.045);outline:2px solid var(--green);outline-offset:-2px}
+.seat-name-row[aria-expanded="true"]{background:rgba(116,40,42,.055);box-shadow:inset 4px 0 0 var(--oxblood)}
+.seat-name-row .rank{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);font-size:10px}
+.seat-name-row .name{font-size:11px;line-height:1.4;font-weight:800;white-space:pre-line}
+.seat-name-row .num{font:800 12px Georgia,'Times New Roman',serif;white-space:nowrap}
+.seat-names-more{appearance:none;width:100%;margin-top:10px;padding:10px 12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:11px;font-weight:900;letter-spacing:.06em;cursor:pointer}
+.seat-method-note{font-size:10px;line-height:1.65;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px dashed rgba(116,109,84,.5)}
+@media(max-width:720px){
+  .seat-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .seat-overview b{font-size:21px}
+  .seat-axis-grid{grid-template-columns:1fr;gap:12px}
+  .seat-match-row{grid-template-columns:70px minmax(0,1fr);gap:6px 9px}
+  .seat-match-row .sm-seat{grid-column:2;text-align:left}
 }
 
 </style>
@@ -488,6 +539,7 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   <div class="club-record ground-summary" id="groundSummary" hidden></div>
   <div class="club-record ground-summary" id="myGroundSummary" hidden></div>
   <div class="club-record ticket-archive" id="ticketArchive" hidden></div>
+  <div class="club-record seat-archive" id="seatArchive" hidden></div>
   <div class="scorer-record" id="scorerRecord">
     <div class="report-kicker">GOALS SEEN / 得点者記録</div>
     <div class="scorer-note" id="scorerNote">現在の検索結果に記録された得点者</div>
@@ -1006,6 +1058,10 @@ function myGroundSummaryHtml(rows){
 let showAllRecords=false;
 let showTicketDetails=false;
 let openTicketMetric="";
+let openTicketSeasonYear="";
+let openSeatFilter="";
+let openSeatName="";
+let showAllSeatNames=false;
 
 function hasActiveFilters(){
   return !!(
@@ -1072,8 +1128,8 @@ function ticketStats(rows){
   return {buckets,jpyCount:jpy.length,sum,avg,med,highest,lowest,priceRecorded,
     sources:[...sources.entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"))};
 }
-function ticketMatchListHtml(rows, priceLabelFn=null){
-  const sorted=rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0));
+function ticketMatchListHtml(rows, priceLabelFn=null, preserveOrder=false){
+  const sorted=preserveOrder ? rows.slice() : rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0));
   if(!sorted.length) return `<div class="ticket-panel-note">該当する記録はありません。</div>`;
   return `<div class="ticket-match-list">${sorted.map(r=>`<button type="button" class="ticket-match-row" data-ticket-match="${DATA.indexOf(r)}"><span class="tm-date">${esc(r.date_label||r.date||"—")}</span><span class="tm-card">${esc(r.card||"—")}</span><span class="tm-price">${esc(priceLabelFn?priceLabelFn(r):(r.price||"—"))}</span></button>`).join("")}</div>`;
 }
@@ -1098,13 +1154,18 @@ function ticketMetricPanelHtml(rows,key,s){
   const foreign=rows.filter(r=>ticketPriceBucket(r.price)==="foreign");
   const missing=rows.filter(r=>!String(r.price||"").trim());
   const seasonByYear=[...season.reduce((m,r)=>{const y=r.year||"不明";m.set(y,(m.get(y)||0)+1);return m;},new Map()).entries()].sort((a,b)=>String(b[0]).localeCompare(String(a[0])));
-  const seasonRows=seasonByYear.map(([y,n])=>`<div class="ticket-year-row"><span class="year">${esc(y)}</span><span>${n} MATCHES</span><span class="count">SEASON TICKET</span><span></span></div>`).join("");
+  const seasonRows=seasonByYear.map(([y,n])=>{
+    const yr=String(y);
+    const expanded=openTicketSeasonYear===yr;
+    const yrMatches=season.filter(r=>String(r.year||"")===yr);
+    return `<button type="button" class="ticket-year-row ticket-year-button" data-ticket-season-year="${esc(yr)}" aria-expanded="${expanded}"><span class="year">${esc(y)}</span><span>${n} MATCHES</span><span class="count">${expanded?"CLOSE":"OPEN RECORDS"}</span><span></span></button>${expanded?`<div class="ticket-year-match-wrap">${ticketMatchListHtml(yrMatches)}</div>`:""}`;
+  }).join("");
   const foreignByCurrency=[...foreign.reduce((m,r)=>{const mm=String(r.price||"").match(/\b(KRW|AUD|THB|CNY|TRY)\b/i); const k=mm?mm[1].toUpperCase():"OTHER";m.set(k,(m.get(k)||0)+1);return m;},new Map()).entries()].sort((a,b)=>b[1]-a[1]);
   const foreignSummary=foreignByCurrency.map(([c,n])=>`<div class="ticket-year-row"><span class="year">${esc(c)}</span><span>${n}件</span><span class="count">FOREIGN CURRENCY</span><span></span></div>`).join("");
   if(key==="total") return `<div class="ticket-panel"><div class="ticket-panel-head">PRICE HISTORY / 年別チケット価格</div><div class="ticket-panel-note">日本円の単試合価格だけを年別に集計しています。</div>${yearRows}</div>`;
   if(key==="analysis") return `<div class="ticket-panel"><div class="ticket-panel-head">PRICE ANALYSIS / 価格分析</div><div class="ticket-stat-strip"><div><b>¥${fmt(s.avg)}</b><span>AVERAGE</span></div><div><b>¥${fmt(s.med)}</b><span>MEDIAN</span></div><div><b>${s.jpyCount}</b><span>PAID JPY</span></div></div>${yearRows}</div>`;
-  if(key==="paid") return `<div class="ticket-panel"><div class="ticket-panel-head">PAID MATCHES / 有料観戦一覧</div><div class="ticket-panel-note">価格の高い順。試合をタップするとMATCH RECORDを開きます。</div>${ticketMatchListHtml(paid,r=>`¥${fmt(ticketJpyValue(r.price))}`)}</div>`;
-  if(key==="season") return `<div class="ticket-panel"><div class="ticket-panel-head">SEASON TICKET RECORDS / シーズン券観戦史</div><div class="ticket-panel-note">年別のシーズンチケット観戦数と該当試合。</div>${seasonRows}${ticketMatchListHtml(season)}</div>`;
+  if(key==="paid") return `<div class="ticket-panel"><div class="ticket-panel-head">PAID MATCHES / 有料観戦一覧</div><div class="ticket-panel-note">価格の高い順。試合をタップするとMATCH RECORDを開きます。</div>${ticketMatchListHtml(paid,r=>`¥${fmt(ticketJpyValue(r.price))}`,true)}</div>`;
+  if(key==="season") return `<div class="ticket-panel"><div class="ticket-panel-head">SEASON TICKET RECORDS / シーズン券観戦史</div><div class="ticket-panel-note">年をタップすると、その年にシーズンチケットで観戦した試合だけを表示します。</div>${seasonRows}</div>`;
   if(key==="free") return `<div class="ticket-panel"><div class="ticket-panel-head">FREE & INVITED RECORDS / 無料・招待試合</div><div class="ticket-panel-note">無料開放・招待券などの観戦記録。</div>${ticketMatchListHtml(free)}</div>`;
   if(key==="foreign") return `<div class="ticket-panel"><div class="ticket-panel-head">OVERSEAS TICKETS / 海外チケット</div><div class="ticket-panel-note">外貨で記録されているチケット。通貨別件数と該当試合。</div>${foreignSummary}${ticketMatchListHtml(foreign)}</div>`;
   if(key==="coverage"){
@@ -1113,6 +1174,96 @@ function ticketMetricPanelHtml(rows,key,s){
   }
   return "";
 }
+
+function seatText(r){ return String(r&&r.seat||"").trim(); }
+function seatStyle(r){
+  const t=seatText(r);
+  if(!t || t.includes("不明")) return "unknown";
+  if(/立見|立ち見/.test(t)) return "standing";
+  if(/指定/.test(t)) return "reserved";
+  if(/自由/.test(t)) return "free";
+  if(/ゾーン|エリア|カテゴリー|区(?:$|\s|\n|）|\))/.test(t)) return "zone";
+  return "other";
+}
+function seatArea(r){
+  const t=seatText(r);
+  if(!t || t.includes("不明")) return "unknown";
+  if(/ゴール裏/.test(t)) return "goal";
+  if(/メイン/.test(t)) return "main";
+  if(/バック|バツク|バッグスタンド/.test(t)) return "back";
+  return "other";
+}
+function seatSide(r){
+  const t=seatText(r);
+  if(!t || t.includes("不明")) return "unknown";
+  // 実際の観戦側が明記されている場合は購入席名より優先。
+  if(/観戦はビジター|ビジター側|アウェイ|ビジター/.test(t)) return "away";
+  if(/チリ応援エリア|応援エリア/.test(t)) return "special";
+  if(/ホーム|柏熱地帯/.test(t)) return "home";
+  return "unknown";
+}
+function seatLevel(r){
+  const t=seatText(r);
+  if(!t || t.includes("不明")) return "unknown";
+  if(/2階|3階|2層|3層|アッパー|上層|2F|3F/i.test(t)) return "upper";
+  if(/1階|1層|ロアー|1F/i.test(t)) return "lower";
+  return "unknown";
+}
+const seatAxisDefs={
+  style:{title:"SEATING STYLE / 座席方式",note:"名称に明記された『自由・指定・立見・ゾーン/カテゴリー』だけで判定。",fn:seatStyle,items:[
+    ["free","FREE / 自由席"],["reserved","RESERVED / 指定席"],["standing","STANDING / 立見"],["zone","ZONE · CATEGORY / ゾーン・カテゴリー"],["other","OTHER / その他"],["unknown","UNKNOWN / 不明・未判定"]]},
+  area:{title:"AREA / 観戦位置",note:"ゴール裏・メイン・バックが席種名に明記された記録のみ。単なる『自由席』から場所は推測しません。",fn:seatArea,items:[
+    ["goal","GOAL END / ゴール裏"],["main","MAIN / メイン"],["back","BACK / バック"],["other","OTHER / その他"],["unknown","UNKNOWN / 不明・未判定"]]},
+  side:{title:"SIDE / 応援側",note:"ホーム・ビジター/アウェイ等の明記だけを使用。",fn:seatSide,items:[
+    ["away","AWAY / ビジター・アウェイ"],["home","HOME / ホーム"],["special","SPECIAL / 特別応援エリア"],["unknown","UNKNOWN / 不明・中立"]]},
+  level:{title:"LEVEL / 階層",note:"1階・ロアー、2階/3層・アッパー等が明記された場合のみ。",fn:seatLevel,items:[
+    ["lower","LOWER / 1階・ロアー"],["upper","UPPER / 2階以上・アッパー"],["unknown","UNKNOWN / 不明・未判定"]]}
+};
+function seatRecordedRows(rows){ return rows.filter(r=>seatText(r)); }
+function seatAxisRows(rows,axis,value){
+  const def=seatAxisDefs[axis]; if(!def) return [];
+  return rows.filter(r=>def.fn(r)===value);
+}
+function seatMatchListHtml(rows){
+  const sorted=rows.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0));
+  if(!sorted.length) return `<div class="seat-drill-note">該当する記録はありません。</div>`;
+  return `<div class="seat-match-list">${sorted.map(r=>`<button type="button" class="seat-match-row" data-seat-match="${DATA.indexOf(r)}"><span class="sm-date">${esc(r.date_label||r.date||"—")}</span><span class="sm-card">${esc(r.card||"—")}</span><span class="sm-seat">${esc(r.seat||"—")}</span></button>`).join("")}</div>`;
+}
+function seatArchiveHtml(rows){
+  const recorded=seatRecordedRows(rows), total=rows.length;
+  const blank=total-recorded.length;
+  const unique=[...recorded.reduce((m,r)=>{const k=seatText(r);m.set(k,(m.get(k)||0)+1);return m;},new Map()).entries()].sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"ja"));
+  const free=recorded.filter(r=>seatStyle(r)==="free").length;
+  const reserved=recorded.filter(r=>seatStyle(r)==="reserved").length;
+  const away=recorded.filter(r=>seatSide(r)==="away").length;
+  const pct=n=>recorded.length?(n/recorded.length*100):0;
+  const axisHtml=Object.entries(seatAxisDefs).map(([axis,def])=>{
+    const items=def.items.map(([key,label])=>{
+      const n=seatAxisRows(recorded,axis,key).length, active=openSeatFilter===`${axis}:${key}`;
+      return `<button type="button" class="seat-axis-row" data-seat-filter="${axis}:${key}" aria-expanded="${active}"><span class="seat-label">${esc(label)}</span><span class="seat-count">${n} · ${pct(n).toFixed(1)}%</span><span class="seat-bar"><i style="width:${Math.min(100,pct(n)).toFixed(1)}%"></i></span></button>`;
+    }).join("");
+    return `<div class="seat-axis"><div class="seat-axis-title">${esc(def.title)}</div><div class="seat-axis-note">${esc(def.note)}</div>${items}</div>`;
+  }).join("");
+  let drill="";
+  if(openSeatFilter){
+    const [axis,value]=openSeatFilter.split(":"); const def=seatAxisDefs[axis];
+    if(def){ const item=def.items.find(x=>x[0]===value), rs=seatAxisRows(recorded,axis,value); drill=`<div class="seat-drill"><div class="seat-drill-head">${esc(item?item[1]:value)} — ${rs.length} MATCHES</div><div class="seat-drill-note">原文の席種名を右側に残しています。試合をタップするとMATCH RECORDを開きます。</div>${seatMatchListHtml(rs)}</div>`; }
+  } else if(openSeatName){
+    const rs=recorded.filter(r=>seatText(r)===openSeatName);
+    drill=`<div class="seat-drill"><div class="seat-drill-head">ORIGINAL NAME / ${esc(openSeatName)} — ${rs.length} MATCHES</div><div class="seat-drill-note">当時の席種表記が完全一致する観戦記録。</div>${seatMatchListHtml(rs)}</div>`;
+  }
+  const shown=showAllSeatNames?unique:unique.slice(0,15);
+  const nameRows=shown.map(([name,n],i)=>`<button type="button" class="seat-name-row" data-seat-name="${esc(name)}" aria-expanded="${openSeatName===name}"><span class="rank">${String(i+1).padStart(2,"0")}</span><span class="name">${esc(name)}</span><span class="num">${n}回</span></button>`).join("");
+  const more=unique.length>15?`<button type="button" class="seat-names-more" id="seatNamesMore">${showAllSeatNames?"TOP 15に戻す":`全表記を見る（${unique.length}種類）`}</button>`:"";
+  const coverage=total?(recorded.length/total*100):0;
+  return `<div class="report-kicker">SEAT ARCHIVE / 席種記録</div>
+    <div class="scorer-note">当時の席種名はそのまま保存し、統計だけを複数の軸に分けて整理。現在の絞り込み条件に連動します。</div>
+    <div class="seat-overview"><div><b>${recorded.length}</b><span>RECORDED / 席種記録<br>${coverage.toFixed(1)}%</span></div><div><b>${free}</b><span>FREE / 自由席表記<br>${pct(free).toFixed(1)}%</span></div><div><b>${reserved}</b><span>RESERVED / 指定席表記<br>${pct(reserved).toFixed(1)}%</span></div><div><b>${away}</b><span>AWAY / アウェイ明記<br>${pct(away).toFixed(1)}%</span></div></div>
+    <div class="seat-axis-grid">${axisHtml}</div>${drill}
+    <div class="seat-originals"><div class="seat-original-head"><div class="seat-original-title">ORIGINAL SEAT NAMES / 当時の席種表記</div><div class="seat-original-count">${unique.length} TYPES · 空欄 ${blank}</div></div>${nameRows}${more}</div>
+    <div class="seat-method-note">分類は席種欄に明記された語だけを使う保守的なルールです。たとえば「自由席」だけではゴール裏と推測せず、AREAは未判定のまま残します。原文は変更していません。</div>`;
+}
+
 function ticketArchiveHtml(rows){
   const s=ticketStats(rows), fmt=n=>Number(n||0).toLocaleString("ja-JP");
   const sourceRows=s.sources.filter(([name])=>name!=="記録なし" && name!=="不明").slice(0,10).map(([name,n],i)=>`<div class="ticket-source-row"><span class="rank">${String(i+1).padStart(2,"0")}</span><span>${esc(name)}</span><span class="num">${n}回</span></div>`).join("");
@@ -1257,13 +1408,35 @@ function render(){
     const ticketExpand=$("#ticketExpand");
     if(ticketExpand) ticketExpand.onclick=()=>{showTicketDetails=!showTicketDetails; render(); ticketBox.scrollIntoView({behavior:"smooth",block:"start"});};
     ticketBox.querySelectorAll("[data-ticket-metric]").forEach(btn=>btn.onclick=()=>{
-      const key=btn.dataset.ticketMetric; openTicketMetric=(openTicketMetric===key?"":key); render();
+      const key=btn.dataset.ticketMetric; openTicketMetric=(openTicketMetric===key?"":key); if(key!=="season" || !openTicketMetric) openTicketSeasonYear=""; render();
+      const box=$("#ticketArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    ticketBox.querySelectorAll("[data-ticket-season-year]").forEach(btn=>btn.onclick=()=>{
+      const y=btn.dataset.ticketSeasonYear; openTicketSeasonYear=(openTicketSeasonYear===y?"":y); render();
       const box=$("#ticketArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
     });
     ticketBox.querySelectorAll("[data-ticket-match]").forEach(btn=>btn.onclick=()=>{
       const r=DATA[Number(btn.dataset.ticketMatch)]; if(r) openDetail(r);
     });
-  } else { ticketBox.hidden=true; ticketBox.innerHTML=""; showTicketDetails=false; openTicketMetric=""; }
+  } else { ticketBox.hidden=true; ticketBox.innerHTML=""; showTicketDetails=false; openTicketMetric=""; openTicketSeasonYear=""; }
+
+  const seatBox=$("#seatArchive");
+  if(rows.length){
+    seatBox.hidden=false;
+    seatBox.innerHTML=seatArchiveHtml(rows);
+    seatBox.querySelectorAll("[data-seat-filter]").forEach(btn=>btn.onclick=()=>{
+      const key=btn.dataset.seatFilter; openSeatFilter=(openSeatFilter===key?"":key); openSeatName=""; render();
+      const box=$("#seatArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    seatBox.querySelectorAll("[data-seat-name]").forEach(btn=>btn.onclick=()=>{
+      const name=btn.dataset.seatName; openSeatName=(openSeatName===name?"":name); openSeatFilter=""; render();
+      const box=$("#seatArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+    seatBox.querySelectorAll("[data-seat-match]").forEach(btn=>btn.onclick=()=>{
+      const r=DATA[Number(btn.dataset.seatMatch)]; if(r) openDetail(r);
+    });
+    const seatMore=$("#seatNamesMore"); if(seatMore) seatMore.onclick=()=>{showAllSeatNames=!showAllSeatNames; render(); const box=$("#seatArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});};
+  } else { seatBox.hidden=true; seatBox.innerHTML=""; openSeatFilter=""; openSeatName=""; showAllSeatNames=false; }
 
   const venueBox=$("#venueRecord");
   const venueTerm=(selectedVenue || venueSearch.value.trim());
