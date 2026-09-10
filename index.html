@@ -913,10 +913,11 @@ function scorerRanking(rows){
 function competitionBucket(label){
   let s=String(label||"").trim();
   if(!s) return "大会不明";
-  s=s.replace(/^\s*(?:19|20)\d{2}\s*/, "").trim();
+  s=s.replace(/^\s*(?:19|20)\d{2}(?!年度)\s*/, "").trim();
   if(/Jリーグディビジョン1|J1リーグ|Ｊ１リーグ/i.test(s)) return "J1リーグ";
   if(/Jリーグディビジョン2|J2リーグ|Ｊ２リーグ/i.test(s)) return "J2リーグ";
   if(/Jリーグディビジョン3|J3リーグ|Ｊ３リーグ/i.test(s)) return "J3リーグ";
+  if(/スルガ銀行チャンピオンシップ/i.test(s)) return "スルガ銀行チャンピオンシップ";
   if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "Jリーグカップ";
   if(/天皇杯/.test(s)) return "天皇杯";
   if(/AFCチャンピオンズリーグ|AFC Champions League|ACLE/i.test(s)) return "AFCチャンピオンズリーグ";
@@ -981,6 +982,7 @@ function groundCompetitionGroup(label){
   if(/スュペル.*リグ|Süper Lig/i.test(s)) return "SÜPER LIG / トルコ1部";
   if(/K League 1|Kリーグ.*1/i.test(s)) return "K LEAGUE 1 / 韓国1部";
   if(/Aリーグ/i.test(s)) return "A-LEAGUE / 豪州リーグ";
+  if(/スルガ銀行チャンピオンシップ/i.test(s)) return "SURUGA BANK CHAMPIONSHIP / スルガ銀行チャンピオンシップ";
   if(/ナビスコカップ|ルヴァンカップ|YBC/i.test(s)) return "LEAGUE CUP / リーグカップ";
   if(/天皇杯/.test(s)) return "EMPEROR'S CUP / 天皇杯";
   if(/Jリーグチャンピオンシップ/i.test(s)) return "J.LEAGUE CHAMPIONSHIP / CS";
@@ -993,7 +995,6 @@ function groundCompetitionGroup(label){
   if(/キリンカップ/i.test(s)) return "KIRIN CUP / キリンカップ";
   if(/TOYO TIRES CUP/i.test(s)) return "TOYO TIRES CUP / 日本代表戦";
   if(/JALチャレンジカップ/i.test(s)) return "JAL CHALLENGE CUP / 日本代表戦";
-  if(/スルガ銀行チャンピオンシップ/i.test(s)) return "SURUGA BANK CHAMPIONSHIP / スルガ銀行杯";
   if(/ワールドチャレンジ/i.test(s)) return "WORLD CHALLENGE / 国際クラブ親善";
   if(/PSG|パリ・サン=ジェルマン|ブンデスリーガジャパンツアー|EUROJAPAN CUP|Audi Football Summit|ブライトン.*ジャパンツアー|EL CLÁSICO/i.test(s)) return "INTERNATIONAL CLUB EVENT / 国際クラブ戦";
   if(/国際親善試合/i.test(s)) return "INTERNATIONAL FRIENDLY / 国際親善試合";
