@@ -479,6 +479,45 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   .seat-match-row .sm-seat{grid-column:2;text-align:left}
 }
 
+
+
+/* v7.4 — Calendar archive */
+.calendar-archive{grid-column:1/-1;border-top:9px solid var(--oxblood)}
+.calendar-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:14px}
+.calendar-title{font-family:Georgia,"Times New Roman",serif;font-size:28px;font-weight:700;letter-spacing:.02em;color:var(--green)}
+.calendar-sub{font:800 10px Arial,sans-serif;letter-spacing:.12em;color:#776d5b;text-transform:uppercase;margin-top:3px}
+.calendar-nav{display:flex;gap:6px;align-items:center}
+.calendar-nav button{border:2px solid #81765f;background:#fffaf0;color:#262522;min-width:38px;height:36px;font:900 13px Arial,sans-serif;cursor:pointer;box-shadow:2px 2px 0 rgba(0,0,0,.08)}
+.calendar-nav button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(0,0,0,.10)}
+.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.calendar-weekdays{border:2px solid #81765f;border-bottom:0;background:#262522;color:#fff7e7}
+.calendar-weekdays span{text-align:center;padding:7px 2px;font:900 9px Arial,sans-serif;letter-spacing:.1em}
+.calendar-grid{border-left:2px solid #81765f;border-top:2px solid #81765f}
+.calendar-day{appearance:none;border:0;border-right:2px solid #81765f;border-bottom:2px solid #81765f;background:#fffaf0;min-height:92px;padding:7px;text-align:left;position:relative;color:#262522;cursor:default}
+.calendar-day.outside{background:#e9e0cd;color:#aaa18e}
+.calendar-day.has-match{cursor:pointer;background:#f6f0df}
+.calendar-day.has-match:hover{background:#efe4c9}
+.calendar-day.selected{box-shadow:inset 0 0 0 3px var(--oxblood)}
+.calendar-date{font:900 12px Arial,sans-serif}
+.calendar-count{display:inline-block;margin-top:9px;background:var(--green);color:#fff7e7;padding:3px 5px;font:900 9px Arial,sans-serif;letter-spacing:.05em}
+.calendar-day.selected .calendar-count{background:var(--oxblood)}
+.calendar-mini-card{font-size:10px;line-height:1.25;margin-top:6px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-day-detail{border:2px solid #81765f;border-top:0;background:#f8f3e6;padding:14px}
+.calendar-day-detail[hidden]{display:none}
+.calendar-detail-title{font:900 11px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;color:var(--oxblood)}
+.calendar-match-row{width:100%;border:0;border-top:1px solid #d7cbb1;background:transparent;padding:10px 2px;display:grid;grid-template-columns:105px minmax(0,1fr) 70px;gap:9px;text-align:left;align-items:center;cursor:pointer;color:inherit}
+.calendar-match-row:first-of-type{border-top:0}
+.calendar-match-row:hover .calendar-match-card{text-decoration:underline}
+.calendar-match-date{font:800 10px Arial,sans-serif;color:#716754}
+.calendar-match-card{font-weight:800}
+.calendar-match-score{text-align:right;font:900 14px Georgia,serif}
+.calendar-note{font-size:11px;line-height:1.5;color:#766d5c;margin-top:10px}
+@media(max-width:760px){
+  .calendar-head{align-items:flex-start;flex-direction:column}.calendar-title{font-size:24px}.calendar-nav{width:100%}.calendar-nav button{flex:1}
+  .calendar-day{min-height:65px;padding:5px}.calendar-weekdays span{font-size:8px}.calendar-date{font-size:10px}.calendar-count{font-size:8px;margin-top:7px;padding:2px 4px}.calendar-mini-card{display:none}
+  .calendar-match-row{grid-template-columns:72px minmax(0,1fr) 46px;gap:7px}.calendar-match-score{font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -540,6 +579,7 @@ footer{border-top:3px solid #262522;padding-top:20px}.external-records a{border:
   <div class="club-record ground-summary" id="myGroundSummary" hidden></div>
   <div class="club-record ticket-archive" id="ticketArchive" hidden></div>
   <div class="club-record seat-archive" id="seatArchive" hidden></div>
+  <div class="club-record calendar-archive" id="calendarArchive" hidden></div>
   <div class="scorer-record" id="scorerRecord">
     <div class="report-kicker">GOALS SEEN / 得点者記録</div>
     <div class="scorer-note" id="scorerNote">現在の検索結果に記録された得点者</div>
@@ -1323,6 +1363,40 @@ function filtered(){
   }).sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.no||0)-(a.no||0));
 }
 
+
+let calendarCursor = (()=>{
+  const dates=DATA.map(r=>r.date).filter(Boolean).sort();
+  const d=dates.length?new Date(dates[dates.length-1]+"T12:00:00"):new Date();
+  return {year:d.getFullYear(),month:d.getMonth()};
+})();
+let calendarSelectedDate="";
+
+function calendarMonthKey(y,m){ return `${y}-${String(m+1).padStart(2,"0")}`; }
+function calendarMove(delta){
+  const d=new Date(calendarCursor.year,calendarCursor.month+delta,1);
+  calendarCursor={year:d.getFullYear(),month:d.getMonth()}; calendarSelectedDate=""; render();
+  const box=$("#calendarArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function calendarArchiveHtml(rows){
+  const y=calendarCursor.year,m=calendarCursor.month;
+  const monthRows=rows.filter(r=>String(r.date||"").startsWith(calendarMonthKey(y,m)));
+  const byDate=new Map(); monthRows.forEach(r=>{ if(!byDate.has(r.date)) byDate.set(r.date,[]); byDate.get(r.date).push(r); });
+  const first=new Date(y,m,1), last=new Date(y,m+1,0);
+  const start=new Date(y,m,1-first.getDay());
+  const cells=[];
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const rs=byDate.get(key)||[]; const outside=d.getMonth()!==m;
+    const cls=["calendar-day",outside?"outside":"",rs.length?"has-match":"",calendarSelectedDate===key?"selected":""].filter(Boolean).join(" ");
+    const mini=rs.length?`<div class="calendar-count">${rs.length} MATCH${rs.length>1?"ES":""}</div><div class="calendar-mini-card">${esc(rs[0].card||"")}</div>`:"";
+    cells.push(`<button type="button" class="${cls}" data-calendar-date="${key}" ${rs.length?"":"disabled"}><div class="calendar-date">${d.getDate()}</div>${mini}</button>`);
+  }
+  const selectedRows=calendarSelectedDate?(byDate.get(calendarSelectedDate)||[]):[];
+  const selectedHtml=selectedRows.length?`<div class="calendar-day-detail"><div class="calendar-detail-title">${calendarSelectedDate.replaceAll("-",".")} / ${selectedRows.length} MATCH${selectedRows.length>1?"ES":""}</div>${selectedRows.map(r=>`<button class="calendar-match-row" type="button" data-calendar-match="${DATA.indexOf(r)}"><span class="calendar-match-date">${esc(r.time||"TIME —")}</span><span class="calendar-match-card">${esc(r.card||"")}<small style="display:block;font-weight:600;color:#776d5b;margin-top:2px">${esc(canonicalVenueName(r.venue)||r.venue||"会場不明")}</small></span><span class="calendar-match-score">${esc(r.score||"—")}</span></button>`).join("")}</div>`:"";
+  return `<div class="calendar-head"><div><div class="report-kicker">CALENDAR / 観戦カレンダー</div><div class="calendar-title">${y}.${String(m+1).padStart(2,"0")}</div><div class="calendar-sub">${monthRows.length} MATCH${monthRows.length===1?"":"ES"} IN THIS MONTH / この月の観戦記録</div></div><div class="calendar-nav"><button type="button" data-cal-nav="-12" aria-label="前年">−1Y</button><button type="button" data-cal-nav="-1" aria-label="前月">‹</button><button type="button" data-cal-latest="1">LATEST</button><button type="button" data-cal-nav="1" aria-label="次月">›</button><button type="button" data-cal-nav="12" aria-label="翌年">+1Y</button></div></div><div class="calendar-weekdays"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div><div class="calendar-grid">${cells.join("")}</div>${selectedHtml}<div class="calendar-note">観戦記録のある日をタップすると、その日の試合を表示します。現在の検索・クラブ・会場・年・OCCASIONSの絞り込みにも連動します。</div>`;
+}
+
 function render(){
   const rows = filtered();
   const team=selectedTeam;
@@ -1437,6 +1511,18 @@ function render(){
     });
     const seatMore=$("#seatNamesMore"); if(seatMore) seatMore.onclick=()=>{showAllSeatNames=!showAllSeatNames; render(); const box=$("#seatArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"});};
   } else { seatBox.hidden=true; seatBox.innerHTML=""; openSeatFilter=""; openSeatName=""; showAllSeatNames=false; }
+
+  const calendarBox=$("#calendarArchive");
+  if(rows.length){
+    calendarBox.hidden=false;
+    calendarBox.innerHTML=calendarArchiveHtml(rows);
+    calendarBox.querySelectorAll("[data-cal-nav]").forEach(btn=>btn.onclick=()=>calendarMove(Number(btn.dataset.calNav)));
+    const latestBtn=calendarBox.querySelector("[data-cal-latest]"); if(latestBtn) latestBtn.onclick=()=>{
+      const ds=rows.map(r=>r.date).filter(Boolean).sort(); if(ds.length){ const d=new Date(ds[ds.length-1]+"T12:00:00"); calendarCursor={year:d.getFullYear(),month:d.getMonth()}; calendarSelectedDate=""; render(); }
+    };
+    calendarBox.querySelectorAll("[data-calendar-date]").forEach(btn=>btn.onclick=()=>{ calendarSelectedDate=calendarSelectedDate===btn.dataset.calendarDate?"":btn.dataset.calendarDate; render(); const box=$("#calendarArchive"); if(box) box.scrollIntoView({behavior:"smooth",block:"start"}); });
+    calendarBox.querySelectorAll("[data-calendar-match]").forEach(btn=>btn.onclick=()=>{ const r=DATA[Number(btn.dataset.calendarMatch)]; if(r) openDetail(r); });
+  } else { calendarBox.hidden=true; calendarBox.innerHTML=""; calendarSelectedDate=""; }
 
   const venueBox=$("#venueRecord");
   const venueTerm=(selectedVenue || venueSearch.value.trim());
